@@ -6,7 +6,7 @@ export default function TicketPurchaseForm({
   eventId,
   price,
 }: {
-  eventId: number;
+  eventId: string;
   price: number;
 }) {
   const [quantity, setQuantity] = useState(1);
