@@ -4,11 +4,14 @@ import EventCard from "@/components/EventCard";
 export default async function EventsPage() {
   const today = new Date().toISOString().split("T")[0];
 
+  const clientId = process.env.CLIENT_ID;
+
   const { data: events, error } = await supabase
     .from("events")
-    .select("id, name, date, price, flyer_url")
-    .gte("date", today)
-    .order("date", { ascending: true });
+    .select("id, name, event_date, price, flyer_url")
+    .eq("client_id", clientId)
+    .gte("event_date", today)
+    .order("event_date", { ascending: true });
 
   return (
     <main className="min-h-screen bg-black text-white">

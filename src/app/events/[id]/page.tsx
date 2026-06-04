@@ -10,9 +10,12 @@ export default async function EventDetailPage({
 }) {
   const { id } = await params;
 
+  const clientId = process.env.CLIENT_ID;
+
   const { data: event, error } = await supabase
     .from("events")
-    .select("id, name, date, price, flyer_url, dj_lineup, genre")
+    .select("id, name, event_date, price, flyer_url, dj_lineup, genre")
+    .eq("client_id", clientId)
     .eq("id", id)
     .single();
 
@@ -51,7 +54,7 @@ export default async function EventDetailPage({
         {/* Event header */}
         <div className="mb-6">
           <p className="text-zinc-400 text-sm mb-1">
-            {formatEventDate(event.date)}
+            {formatEventDate(event.event_date)}
           </p>
           <h1 className="text-3xl font-bold tracking-tight leading-tight mb-2">
             {event.name}

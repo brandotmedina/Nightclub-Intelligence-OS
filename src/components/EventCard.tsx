@@ -5,7 +5,7 @@ import { formatEventDate, formatPrice } from "@/lib/formatEvent";
 type Event = {
   id: number;
   name: string;
-  date: string;
+  event_date: string;
   price: number;
   flyer_url: string | null;
 };
@@ -36,7 +36,7 @@ export default function EventCard({ event }: { event: Event }) {
       {/* Event info */}
       <div className="flex-1 min-w-0">
         <p className="text-xs text-zinc-400 mb-0.5">
-          {formatEventDate(event.date)}
+          {formatEventDate(event.event_date)}
         </p>
         <h2 className="text-white font-semibold text-base leading-snug truncate group-hover:text-purple-300 transition-colors">
           {event.name}
