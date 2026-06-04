@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatEventDate, formatPrice } from "@/lib/formatEvent";
+import TicketPurchaseForm from "./TicketPurchaseForm";
 export default async function EventDetailPage({
   params,
 }: {
@@ -90,13 +91,12 @@ export default async function EventDetailPage({
           )}
         </div>
 
-        {/* ── BUY TICKETS SECTION ─────────────────────────────────────
-            This is the designated slot for the ticket-buying flow.
-            Replace the placeholder below with your ticketing component
-            when ready — no other parts of this page need to change.
-        ─────────────────────────────────────────────────────────────── */}
-        <div className="border border-dashed border-zinc-700 rounded-2xl p-6 text-center">
-          <p className="text-zinc-500 text-sm">Tickets coming soon</p>
+        {/* ── BUY TICKETS SECTION ───────────────────────────────────── */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold text-white mb-5">
+            {event.price === 0 ? "Get Your Free Ticket" : "Buy Tickets"}
+          </h2>
+          <TicketPurchaseForm eventId={event.id} price={event.price} />
         </div>
       </div>
     </main>
