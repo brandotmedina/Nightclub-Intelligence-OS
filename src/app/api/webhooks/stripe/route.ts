@@ -110,6 +110,7 @@ export async function POST(request: Request) {
     // our idempotency + lookup key, so a failure here is fatal (Stripe will retry).
     const { error: payErr } = await supabaseAdmin.from("payments").insert({
       client_id: clientId,
+      customer_id: customerId,
       ticket_order_id: order.id,
       stripe_session_id: session.id,
       amount: totalAmount,
