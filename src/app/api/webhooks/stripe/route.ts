@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     const meta = session.metadata!;
     const clientId = meta.client_id;
-    const eventId = parseInt(meta.event_id);
+    const eventId = meta.event_id;
     const qty = parseInt(meta.quantity);
     const pricePerTicket = parseFloat(meta.price_per_ticket);
     const totalAmount = (session.amount_total ?? 0) / 100;
