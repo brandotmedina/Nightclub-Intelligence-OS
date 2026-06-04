@@ -43,9 +43,8 @@ export async function POST(request: Request) {
         client_id: clientId,
         event_id: eventId,
         customer_id: customerId,
-        stripe_session_id: null,
         quantity,
-        total_amount: 0,
+        total: 0,
         status: "paid",
       })
       .select("id")
@@ -125,7 +124,7 @@ async function upsertCustomer(
 
   const { data: created, error } = await supabaseAdmin
     .from("customers")
-    .insert({ client_id: clientId, name, phone, email })
+    .insert({ client_id: clientId, full_name: name, phone, email })
     .select("id")
     .single();
 

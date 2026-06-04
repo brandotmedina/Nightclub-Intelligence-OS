@@ -24,9 +24,10 @@ export async function POST(request: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    // Idempotency guard — ignore if already processed
+    // Idempotency guard — the Stripe session id lives on the payments table,
+    // so we check there to see if we already handled this session.
     const { data: alreadyProcessed } = await supabaseAdmin
-      .from("ticket_orders")
+      .from("payments")
       .select("id")
       .eq("stripe_session_id", session.id)
       .maybeSingle();
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
         .from("customers")
         .insert({
           client_id: clientId,
-          name: meta.customer_name,
+          full_name: meta.customer_name,
           phone: meta.customer_phone,
           email: meta.customer_email,
         })
@@ -76,9 +77,8 @@ export async function POST(request: Request) {
         client_id: clientId,
         event_id: eventId,
         customer_id: customerId,
-        stripe_session_id: session.id,
         quantity: qty,
-        total_amount: totalAmount,
+        total: totalAmount,
         status: "paid",
       })
       .select("id")
@@ -106,18 +106,20 @@ export async function POST(request: Request) {
       return new Response("Ticket error", { status: 500 });
     }
 
-    // 4. Record payment (non-fatal if this fails — tickets are already created)
+    // 4. Record payment. This row also carries the Stripe session id, which is
+    // our idempotency + lookup key, so a failure here is fatal (Stripe will retry).
     const { error: payErr } = await supabaseAdmin.from("payments").insert({
       client_id: clientId,
       ticket_order_id: order.id,
-      stripe_payment_intent_id: session.payment_intent as string,
+      stripe_session_id: session.id,
       amount: totalAmount,
       currency: "usd",
       status: "succeeded",
     });
 
     if (payErr) {
-      console.error("Payment record failed (non-fatal)", payErr);
+      console.error("Payment record failed", payErr);
+      return new Response("Payment error", { status: 500 });
     }
   }
 

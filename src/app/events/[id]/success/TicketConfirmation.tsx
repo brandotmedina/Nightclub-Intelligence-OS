@@ -14,7 +14,7 @@ type Ticket = {
 
 type OrderResponse = {
   ready: boolean;
-  order?: { id: string; quantity: number; total_amount: number };
+  order?: { id: string; quantity: number; total: number };
   tickets?: Ticket[];
   event?: { name: string; event_date: string };
 };

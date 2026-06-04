@@ -13,19 +13,27 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing identifier" }, { status: 400 });
   }
 
-  const { data: order } = orderId
-    ? await supabaseAdmin
-        .from("ticket_orders")
-        .select("id, quantity, total_amount, event_id")
-        .eq("id", orderId)
-        .eq("client_id", clientId)
-        .single()
-    : await supabaseAdmin
-        .from("ticket_orders")
-        .select("id, quantity, total_amount, event_id")
-        .eq("stripe_session_id", sessionId!)
-        .eq("client_id", clientId)
-        .single();
+  // The Stripe session id lives on the payments table. For session-based
+  // lookups, first resolve the ticket_order_id via payments, then load the order.
+  let resolvedOrderId = orderId;
+  if (!resolvedOrderId && sessionId) {
+    const { data: payment } = await supabaseAdmin
+      .from("payments")
+      .select("ticket_order_id")
+      .eq("stripe_session_id", sessionId)
+      .eq("client_id", clientId)
+      .maybeSingle();
+
+    if (!payment) return NextResponse.json({ ready: false });
+    resolvedOrderId = payment.ticket_order_id as string;
+  }
+
+  const { data: order } = await supabaseAdmin
+    .from("ticket_orders")
+    .select("id, quantity, total, event_id")
+    .eq("id", resolvedOrderId!)
+    .eq("client_id", clientId)
+    .single();
 
   if (!order) return NextResponse.json({ ready: false });
 
