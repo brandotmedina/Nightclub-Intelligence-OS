@@ -17,14 +17,14 @@ export default function EventCard({ event }: { event: Event }) {
       className="flex items-center gap-4 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-600 rounded-2xl p-4 transition-colors group"
     >
       {/* Flyer thumbnail */}
-      <div className="w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-zinc-800 flex items-center justify-center">
+      <div className="relative w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-zinc-800">
         {event.flyer_url ? (
           <Image
             src={event.flyer_url}
             alt={`${event.name} flyer`}
-            width={80}
-            height={80}
-            className="object-cover w-full h-full"
+            fill
+            sizes="80px"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-purple-900 to-pink-900 flex items-center justify-center">
