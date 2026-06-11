@@ -4,6 +4,8 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { formatEventDate, formatPrice } from "@/lib/formatEvent";
 import TicketPurchaseForm from "./TicketPurchaseForm";
+
+export const dynamic = "force-dynamic";
 export default async function EventDetailPage({
   params,
 }: {

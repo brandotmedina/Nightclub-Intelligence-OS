@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import EventCard from "@/components/EventCard";
 
+export const dynamic = "force-dynamic";
+
 export default async function EventsPage() {
   const today = new Date().toISOString().split("T")[0];
 
