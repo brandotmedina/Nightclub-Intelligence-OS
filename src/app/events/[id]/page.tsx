@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { formatEventDate, formatPrice } from "@/lib/formatEvent";
 import TicketPurchaseForm from "./TicketPurchaseForm";
 
+export const dynamic = "force-dynamic";
+
 export default async function EventDetailPage({
   params,
 }: {
@@ -26,6 +28,7 @@ export default async function EventDetailPage({
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="max-w-lg mx-auto px-4 py-12">
+        {/* Back link */}
         <Link
           href="/events"
           className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-white text-sm mb-8 transition-colors"
@@ -33,6 +36,7 @@ export default async function EventDetailPage({
           ‹ All Events
         </Link>
 
+        {/* Full-size flyer */}
         <div className="w-full aspect-square rounded-2xl overflow-hidden bg-zinc-900 mb-8">
           {event.flyer_url ? (
             <Image
@@ -51,6 +55,7 @@ export default async function EventDetailPage({
           )}
         </div>
 
+        {/* Event header */}
         <div className="mb-6">
           <p className="text-zinc-400 text-sm mb-1">
             {formatEventDate(event.event_date)}
@@ -69,22 +74,27 @@ export default async function EventDetailPage({
           </span>
         </div>
 
+        {/* Details */}
         <div className="space-y-4 mb-10">
           {event.dj_lineup && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">DJ Lineup</p>
+              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">
+                DJ Lineup
+              </p>
               <p className="text-white text-sm">{event.dj_lineup}</p>
             </div>
           )}
           {event.genre && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
-              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Music</p>
+              <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">
+                Music
+              </p>
               <p className="text-white text-sm">{event.genre}</p>
             </div>
           )}
         </div>
 
-        {/* ── BUY TICKETS SECTION ───────────────────────────────── */}
+        {/* ── BUY TICKETS SECTION ───────────────────────────────────────────────────── */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
           <h2 className="text-lg font-semibold text-white mb-5">
             {event.price === 0 ? "Get Your Free Ticket" : "Buy Tickets"}
