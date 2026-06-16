@@ -51,90 +51,102 @@ export default function TicketPurchaseForm({
     <form onSubmit={handleSubmit} className="space-y-5">
       {/* Quantity */}
       <div>
-        <label className="block text-sm text-zinc-400 mb-2">Quantity</label>
+        <label className="block text-text-muted text-sm mb-2">Quantity</label>
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center hover:bg-zinc-700 transition-colors text-lg leading-none"
+            className="w-10 h-10 rounded-full bg-surface-2 border border-border text-text flex items-center justify-center hover:border-plum/50 transition-colors text-lg leading-none"
           >
             −
           </button>
-          <span className="text-white font-semibold text-lg w-6 text-center">
+          <span className="text-text font-semibold text-xl w-6 text-center tabular-nums">
             {quantity}
           </span>
           <button
             type="button"
             onClick={() => setQuantity(Math.min(10, quantity + 1))}
-            className="w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center hover:bg-zinc-700 transition-colors text-lg leading-none"
+            className="w-10 h-10 rounded-full bg-surface-2 border border-border text-text flex items-center justify-center hover:border-plum/50 transition-colors text-lg leading-none"
           >
             +
           </button>
-          <span className="text-zinc-400 text-sm ml-1">
-            {isFree ? "Free Entry" : `$${price} each · $${total} total`}
-          </span>
+          {isFree ? (
+            <span className="text-success text-sm ml-1 font-medium">
+              Free Entry
+            </span>
+          ) : (
+            <span className="text-text-dim text-sm ml-1">
+              ${price} ea · <span className="text-text-muted">${total} total</span>
+            </span>
+          )}
         </div>
       </div>
 
       {/* Name */}
       <div>
-        <label className="block text-sm text-zinc-400 mb-1">Full Name</label>
+        <label className="block text-text-muted text-sm mb-1.5">
+          Full Name
+        </label>
         <input
           type="text"
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Your name"
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
+          className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-plum/60 transition-colors"
         />
       </div>
 
       {/* Phone */}
       <div>
-        <label className="block text-sm text-zinc-400 mb-1">Phone Number</label>
+        <label className="block text-text-muted text-sm mb-1.5">
+          Phone Number
+        </label>
         <input
           type="tel"
           required
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="+1 (555) 000-0000"
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
+          className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-plum/60 transition-colors"
         />
       </div>
 
       {/* Email */}
       <div>
-        <label className="block text-sm text-zinc-400 mb-1">Email</label>
+        <label className="block text-text-muted text-sm mb-1.5">Email</label>
         <input
           type="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 transition-colors"
+          className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-plum/60 transition-colors"
         />
       </div>
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && (
+        <p className="text-red-400 text-sm bg-red-950/30 border border-red-900/40 rounded-xl px-4 py-2.5">
+          {error}
+        </p>
+      )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-2xl transition-colors"
+        className="w-full bg-plum hover:bg-plum-bright disabled:opacity-40 disabled:cursor-not-allowed text-text font-semibold py-4 rounded-2xl transition-colors shadow-[0_0_24px_rgba(176,31,144,0.35)]"
       >
         {loading
           ? isFree
-            ? "Getting your ticket…"
+            ? "Reserving…"
             : "Redirecting to payment…"
           : isFree
-          ? `Get ${quantity} Free Ticket${quantity > 1 ? "s" : ""}`
-          : `Buy ${quantity} Ticket${quantity > 1 ? "s" : ""} · $${total}`}
+          ? `Reserve ${quantity > 1 ? `${quantity} ` : ""}Free Ticket${quantity > 1 ? "s" : ""}`
+          : `Checkout · $${total}`}
       </button>
 
       {!isFree && (
-        <p className="text-xs text-zinc-500 text-center">
-          Secured by Stripe · you&apos;ll be redirected to complete payment
-        </p>
+        <p className="text-text-dim text-xs text-center">Secured by Stripe</p>
       )}
     </form>
   );
