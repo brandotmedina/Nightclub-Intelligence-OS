@@ -38,15 +38,15 @@ export default async function EventDetailPage({
             ← All Events
           </Link>
 
-          {/* Full-size flyer */}
-          <div className="w-full aspect-square rounded-2xl overflow-hidden bg-surface mb-8">
+          {/* Full-size flyer — object-contain so tall flyers show uncropped */}
+          <div className="w-full rounded-2xl overflow-hidden bg-surface mb-8 flex items-center justify-center">
             {event.flyer_url ? (
               <Image
                 src={event.flyer_url}
                 alt={`${event.name} flyer`}
                 width={600}
-                height={600}
-                className="object-cover w-full h-full"
+                height={900}
+                className="object-contain w-full h-auto max-h-[80vh]"
                 priority
               />
             ) : (
