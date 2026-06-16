@@ -70,24 +70,24 @@ export default function TicketConfirmation({
 
   if (!pollUrl) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center p-8">
-        <p className="text-zinc-400">Invalid confirmation link.</p>
+      <main className="min-h-screen bg-bg text-text flex items-center justify-center p-8">
+        <p className="text-text-muted">Invalid confirmation link.</p>
       </main>
     );
   }
 
   if (timedOut) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center p-8">
+      <main className="min-h-screen bg-bg text-text flex items-center justify-center p-8">
         <div className="text-center space-y-4 max-w-sm">
-          <p className="text-zinc-300 font-medium">Taking longer than expected</p>
-          <p className="text-zinc-500 text-sm">
+          <p className="text-text font-semibold">Taking longer than expected</p>
+          <p className="text-text-muted text-sm">
             Your payment went through but tickets are still being generated.
-            Try refreshing in a moment.
+            Refresh in a moment.
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="text-purple-400 text-sm underline"
+            className="text-plum-bright text-sm underline underline-offset-2"
           >
             Refresh page
           </button>
@@ -98,10 +98,10 @@ export default function TicketConfirmation({
 
   if (!data?.ready) {
     return (
-      <main className="min-h-screen bg-black text-white flex items-center justify-center p-8">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-zinc-400 text-sm">Confirming your payment…</p>
+      <main className="min-h-screen bg-bg text-text flex items-center justify-center p-8">
+        <div className="text-center space-y-4">
+          <div className="w-10 h-10 border-2 border-plum border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-text-muted text-sm">Confirming your payment…</p>
         </div>
       </main>
     );
@@ -110,44 +110,47 @@ export default function TicketConfirmation({
   const ticketCount = data.tickets?.length ?? 0;
 
   return (
-    <main className="min-h-screen bg-black text-white">
+    <main className="min-h-screen bg-bg text-text">
       <div className="max-w-lg mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🎉</div>
-          <h1 className="text-2xl font-bold">You&apos;re in!</h1>
+          <div className="w-14 h-14 rounded-full bg-success/10 border border-success/20 flex items-center justify-center mx-auto mb-4">
+            <span className="text-success text-xl font-bold">✓</span>
+          </div>
+          <h1 className="font-display text-3xl font-bold text-text mb-1">
+            You&apos;re In
+          </h1>
           {data.event && (
-            <p className="text-zinc-400 text-sm mt-1">
-              {data.event.name} &middot;{" "}
-              {formatEventDate(data.event.event_date)}
+            <p className="text-text-muted text-sm mt-1">
+              {data.event.name} · {formatEventDate(data.event.event_date)}
             </p>
           )}
         </div>
 
         {/* Screenshot notice */}
-        <div className="bg-amber-900/30 border border-amber-700/50 rounded-xl p-4 mb-8 text-center">
-          <p className="text-amber-300 text-sm font-medium">
-            📸 Screenshot this page to save your ticket
-            {ticketCount > 1 ? "s" : ""}
+        <div className="bg-surface border border-border rounded-xl px-4 py-3 mb-8 text-center">
+          <p className="text-text-muted text-sm">
+            Screenshot {ticketCount > 1 ? "these pages" : "this page"} — your
+            QR code{ticketCount > 1 ? "s are" : " is"} your entry pass
           </p>
-          <p className="text-amber-400/70 text-xs mt-1">
-            Each QR code is your entry pass — show it at the door
+          <p className="text-text-dim text-xs mt-0.5">
+            Show at the door · one scan per entry
           </p>
         </div>
 
         {/* Tickets */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           {data.tickets?.map((ticket, i) => (
             <div
               key={ticket.id}
-              className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+              className="bg-surface border border-border rounded-2xl p-6"
             >
               <div className="flex items-center justify-between mb-5">
-                <span className="text-zinc-400 text-sm">
+                <span className="text-text-muted text-sm">
                   Ticket {i + 1}
                   {ticketCount > 1 ? ` of ${ticketCount}` : ""}
                 </span>
-                <span className="text-xs bg-green-900/50 text-green-400 border border-green-800 px-2.5 py-0.5 rounded-full capitalize">
+                <span className="text-xs bg-success/10 text-success border border-success/20 px-2.5 py-0.5 rounded-full capitalize font-medium">
                   {ticket.status}
                 </span>
               </div>
@@ -156,7 +159,7 @@ export default function TicketConfirmation({
                 <QRCode value={ticket.qr_code} size={200} level="M" />
               </div>
 
-              <p className="text-center text-zinc-600 text-xs font-mono break-all">
+              <p className="text-center text-text-dim text-xs font-mono break-all">
                 {ticket.qr_code}
               </p>
             </div>
@@ -166,7 +169,7 @@ export default function TicketConfirmation({
         <div className="mt-10 text-center">
           <Link
             href="/events"
-            className="text-zinc-500 text-sm hover:text-zinc-300 transition-colors"
+            className="text-text-dim text-sm hover:text-text-muted transition-colors"
           >
             ← Back to Events
           </Link>
