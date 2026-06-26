@@ -39,6 +39,8 @@ export async function POST(request: Request) {
     const qty = parseInt(meta.quantity);
     const pricePerTicket = parseFloat(meta.price_per_ticket);
     const totalAmount = (session.amount_total ?? 0) / 100;
+    const taxAmount = parseInt(meta.tax_cents ?? "0") / 100;
+    const feeAmount = parseInt(meta.fee_cents ?? "0") / 100;
 
     // 1. Upsert customer
     let customerId: string;
@@ -79,6 +81,8 @@ export async function POST(request: Request) {
         customer_id: customerId,
         quantity: qty,
         total: totalAmount,
+        tax: taxAmount,
+        fee: feeAmount,
         status: "paid",
       })
       .select("id")
