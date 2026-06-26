@@ -51,16 +51,31 @@ export default async function VipPage({
       .order("label"),
   ]);
 
-  // 3. Load blocking reservations for this event
-  //    A booth is blocked if status='confirmed' OR (status='held' AND hold_expires_at > now())
-  const { data: activeReservations } = await supabase
-    .from("reservations")
-    .select("booth_id, status, hold_expires_at")
-    .eq("client_id", clientId)
-    .eq("event_id", eventId)
-    .or(`status.eq.confirmed,and(status.eq.held,hold_expires_at.gt.${now})`);
+  // 3. Load blocking reservations for this event.
+  //    Two independent queries to avoid ambiguous compound .or() with nulls:
+  //      - confirmed rows always block (hold_expires_at is null for these — intentional)
+  //      - held rows block only when hold_expires_at IS NOT NULL AND > now()
+  const [{ data: confirmedRows }, { data: heldRows }] = await Promise.all([
+    supabase
+      .from("reservations")
+      .select("booth_id")
+      .eq("client_id", clientId)
+      .eq("event_id", eventId)
+      .eq("status", "confirmed"),
+    supabase
+      .from("reservations")
+      .select("booth_id")
+      .eq("client_id", clientId)
+      .eq("event_id", eventId)
+      .eq("status", "held")
+      .not("hold_expires_at", "is", null)
+      .gt("hold_expires_at", now),
+  ]);
 
-  const takenBoothIds = (activeReservations ?? []).map((r) => r.booth_id as string);
+  const takenBoothIds = [
+    ...(confirmedRows ?? []).map((r) => r.booth_id as string),
+    ...(heldRows ?? []).map((r) => r.booth_id as string),
+  ];
 
   return (
     <main className="min-h-screen bg-bg text-text pb-28">
