@@ -17,7 +17,17 @@ export default function TicketPurchaseForm({
   const [error, setError] = useState<string | null>(null);
 
   const isFree = price === 0;
-  const total = price * quantity;
+
+  // Integer-cents math (mirrors checkout/route.ts)
+  const ticketSubtotalCents = Math.round(price * 100) * quantity;
+  const taxCents = Math.round(ticketSubtotalCents * 0.06);
+  const taxedSubtotalCents = ticketSubtotalCents + taxCents;
+  const totalCents = isFree ? 0 : Math.ceil((taxedSubtotalCents + 30) / (1 - 0.029));
+  const feeCents = totalCents - taxedSubtotalCents;
+
+  function fmt(cents: number) {
+    return (cents / 100).toFixed(2);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,17 +80,35 @@ export default function TicketPurchaseForm({
           >
             +
           </button>
-          {isFree ? (
+          {isFree && (
             <span className="text-success text-sm ml-1 font-medium">
               Free Entry
-            </span>
-          ) : (
-            <span className="text-text-dim text-sm ml-1">
-              ${price} ea · <span className="text-text-muted">${total} total</span>
             </span>
           )}
         </div>
       </div>
+
+      {/* Itemized price breakdown for paid events */}
+      {!isFree && (
+        <div className="bg-surface-2 border border-border rounded-xl px-4 py-3 space-y-2 text-sm">
+          <div className="flex justify-between text-text-muted">
+            <span>Tickets ({quantity} × ${price})</span>
+            <span className="tabular-nums">${fmt(ticketSubtotalCents)}</span>
+          </div>
+          <div className="flex justify-between text-text-muted">
+            <span>KY Sales Tax (6%)</span>
+            <span className="tabular-nums">${fmt(taxCents)}</span>
+          </div>
+          <div className="flex justify-between text-text-muted">
+            <span>Processing Fee</span>
+            <span className="tabular-nums">${fmt(feeCents)}</span>
+          </div>
+          <div className="border-t border-border pt-2 flex justify-between text-text font-semibold">
+            <span>Total</span>
+            <span className="tabular-nums">${fmt(totalCents)}</span>
+          </div>
+        </div>
+      )}
 
       {/* Name */}
       <div>
@@ -142,7 +170,7 @@ export default function TicketPurchaseForm({
             : "Redirecting to payment…"
           : isFree
           ? `Reserve ${quantity > 1 ? `${quantity} ` : ""}Free Ticket${quantity > 1 ? "s" : ""}`
-          : `Checkout · $${total}`}
+          : `Checkout · $${fmt(totalCents)}`}
       </button>
 
       {!isFree && (

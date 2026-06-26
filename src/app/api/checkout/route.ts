@@ -79,6 +79,13 @@ export async function POST(request: Request) {
   }
 
   // ── Paid event: Stripe Checkout ───────────────────────────────────────
+  // Integer-cents math to avoid float drift
+  const ticketSubtotalCents = Math.round(event.price * 100) * quantity;
+  const taxCents = Math.round(ticketSubtotalCents * 0.06);
+  const taxedSubtotalCents = ticketSubtotalCents + taxCents;
+  const totalCents = Math.ceil((taxedSubtotalCents + 30) / (1 - 0.029));
+  const feeCents = totalCents - taxedSubtotalCents;
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     line_items: [
@@ -86,9 +93,25 @@ export async function POST(request: Request) {
         price_data: {
           currency: "usd",
           unit_amount: Math.round(event.price * 100),
-          product_data: { name: `${event.name} — Ticket` },
+          product_data: { name: `Admission — ${event.name}` },
         },
         quantity,
+      },
+      {
+        price_data: {
+          currency: "usd",
+          unit_amount: taxCents,
+          product_data: { name: "KY Sales Tax (6%)" },
+        },
+        quantity: 1,
+      },
+      {
+        price_data: {
+          currency: "usd",
+          unit_amount: feeCents,
+          product_data: { name: "Processing Fee" },
+        },
+        quantity: 1,
       },
     ],
     metadata: {
@@ -99,6 +122,8 @@ export async function POST(request: Request) {
       customer_email: customerEmail,
       quantity: String(quantity),
       price_per_ticket: String(event.price),
+      tax_cents: String(taxCents),
+      fee_cents: String(feeCents),
     },
     success_url: `${origin}/events/${eventId}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/events/${eventId}`,
