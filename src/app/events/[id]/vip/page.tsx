@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { formatEventDate } from "@/lib/formatEvent";
 import BoothGrid from "./BoothGrid";
 
@@ -55,14 +56,15 @@ export default async function VipPage({
   //    Two independent queries to avoid ambiguous compound .or() with nulls:
   //      - confirmed rows always block (hold_expires_at is null for these — intentional)
   //      - held rows block only when hold_expires_at IS NOT NULL AND > now()
+  // Uses admin client to bypass RLS — reservations is not exposed to the anon role
   const [{ data: confirmedRows }, { data: heldRows }] = await Promise.all([
-    supabase
+    supabaseAdmin
       .from("reservations")
       .select("booth_id")
       .eq("client_id", clientId)
       .eq("event_id", eventId)
       .eq("status", "confirmed"),
-    supabase
+    supabaseAdmin
       .from("reservations")
       .select("booth_id")
       .eq("client_id", clientId)
@@ -79,11 +81,7 @@ export default async function VipPage({
 
   return (
     <main className="min-h-screen bg-bg text-text pb-28">
-      {/* DEBUG — remove before merge */}
-      <pre style={{background:'#000',color:'#0f0',fontSize:12,padding:8,overflow:'auto'}}>
-        {JSON.stringify({ eventId, clientId, confirmedCount: confirmedRows?.length, confirmedBoothIds: (confirmedRows??[]).map(r=>r.booth_id), heldCount: heldRows?.length, takenBoothIds }, null, 2)}
-      </pre>
-      <div className="max-w-lg mx-auto px-4 pt-6 pb-6">
+<div className="max-w-lg mx-auto px-4 pt-6 pb-6">
         {/* Back link */}
         <Link
           href={`/events/${eventId}`}
