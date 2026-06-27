@@ -177,9 +177,9 @@ export default function BoothGrid({
           </div>
           <div className="text-left bg-surface-2 border border-border rounded-xl px-4 py-3 space-y-1">
             <p className="text-text-dim text-xs uppercase tracking-wider mb-2">Summary</p>
-            <p className="text-text-muted text-sm">{selectedBooth?.label} · ${BOOTH_FEE} min spend</p>
+            <p className="text-text-muted text-sm">{selectedBooth?.label} · ${BOOTH_FEE} reservation fee</p>
             <p className="text-text-muted text-sm">Includes {ENTRIES_INCLUDED} entries</p>
-            <p className="text-text-muted text-sm">1-bottle minimum acknowledged</p>
+            <p className="text-text-muted text-sm">1-bottle minimum required</p>
           </div>
         </div>
 
