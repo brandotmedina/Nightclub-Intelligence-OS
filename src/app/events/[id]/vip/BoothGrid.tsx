@@ -19,6 +19,7 @@ type Phase =
   | { kind: "form"; boothId: string }
   | { kind: "submitting"; boothId: string }
   | { kind: "held"; boothId: string; reservationId: string; holdExpiresAt: string }
+  | { kind: "paying"; boothId: string; reservationId: string; holdExpiresAt: string }
   | { kind: "expired" };
 
 // Schema defaults
@@ -90,7 +91,10 @@ export default function BoothGrid({
   }
 
   const selectedBoothId =
-    phase.kind === "form" || phase.kind === "submitting" || phase.kind === "held"
+    phase.kind === "form" ||
+    phase.kind === "submitting" ||
+    phase.kind === "held" ||
+    phase.kind === "paying"
       ? phase.boothId
       : null;
 
@@ -152,8 +156,39 @@ export default function BoothGrid({
     email.trim().length > 0 &&
     bottleAck;
 
+  async function handlePayment() {
+    if (phase.kind !== "held") return;
+    const { reservationId, boothId, holdExpiresAt } = phase;
+    setPhase({ kind: "paying", boothId, reservationId, holdExpiresAt });
+
+    try {
+      const res = await fetch("/api/vip/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reservationId }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 410) {
+        // Hold expired between Slice 2 and now
+        setPhase({ kind: "expired" });
+        return;
+      }
+
+      if (!res.ok) throw new Error(data.error ?? "checkout_error");
+
+      window.location.href = data.url;
+    } catch {
+      // Restore held state so user can retry
+      setPhase({ kind: "held", boothId, reservationId, holdExpiresAt });
+      setFormError("Could not start checkout. Please try again.");
+    }
+  }
+
   // ── Held state ──────────────────────────────────────────────────────────────
-  if (phase.kind === "held") {
+  if (phase.kind === "held" || phase.kind === "paying") {
+    const holdExpiresAt = phase.holdExpiresAt;
     return (
       <div className="space-y-5">
         <div className="bg-surface border border-border rounded-2xl p-6 text-center space-y-4">
@@ -171,7 +206,7 @@ export default function BoothGrid({
           <div className="bg-surface-2 border border-border rounded-xl px-4 py-3">
             <p className="text-text-dim text-xs mb-1">Time remaining</p>
             <Countdown
-              holdExpiresAt={phase.holdExpiresAt}
+              holdExpiresAt={holdExpiresAt}
               onExpired={() => setPhase({ kind: "expired" })}
             />
           </div>
@@ -183,13 +218,15 @@ export default function BoothGrid({
           </div>
         </div>
 
-        {/* SLICE 3: wire $50 Stripe checkout here */}
         <button
           type="button"
-          disabled
-          className="block w-full bg-plum/40 text-text/50 font-semibold py-4 rounded-2xl text-center cursor-not-allowed"
+          disabled={phase.kind === "paying"}
+          onClick={handlePayment}
+          className="block w-full bg-plum hover:bg-plum-bright disabled:opacity-40 disabled:cursor-not-allowed text-text font-semibold py-4 rounded-2xl text-center transition-colors shadow-[0_0_24px_rgba(176,31,144,0.35)]"
         >
-          Continue to payment — ${BOOTH_FEE}
+          {phase.kind === "paying"
+            ? "Redirecting to payment…"
+            : `Continue to payment — $${BOOTH_FEE}`}
         </button>
 
         <p className="text-text-dim text-xs text-center">
