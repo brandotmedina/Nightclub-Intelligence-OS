@@ -111,6 +111,7 @@ export default async function VipPage({
           areas={(areas ?? []) as Area[]}
           booths={(booths ?? []) as Booth[]}
           takenBoothIds={takenBoothIds}
+          eventId={eventId}
         />
       </div>
     </main>
