@@ -35,6 +35,84 @@ export async function POST(request: Request) {
 
     const meta = session.metadata!;
     const clientId = meta.client_id;
+
+    // ── VIP booth reservation payment ─────────────────────────────────────
+    // Detected by presence of "vip_reservation_id" in metadata.
+    // Ticket sessions never carry this key; VIP sessions always do.
+    if (meta.vip_reservation_id) {
+      const reservationId = meta.vip_reservation_id;
+      const totalAmount = (session.amount_total ?? 0) / 100;
+
+      // Load reservation to get customer_id, event_id, booth_id
+      const { data: reservation } = await supabaseAdmin
+        .from("reservations")
+        .select("id, customer_id, event_id, booth_id, status")
+        .eq("id", reservationId)
+        .eq("client_id", clientId)
+        .single();
+
+      if (!reservation) {
+        console.error("VIP webhook: reservation not found", reservationId);
+        return new Response("ok", { status: 200 }); // non-fatal: return 200
+      }
+
+      // b. Double-book re-check: confirm no OTHER confirmed reservation for this booth+event
+      const { data: conflict } = await supabaseAdmin
+        .from("reservations")
+        .select("id")
+        .eq("client_id", clientId)
+        .eq("event_id", reservation.event_id)
+        .eq("booth_id", reservation.booth_id)
+        .eq("status", "confirmed")
+        .neq("id", reservationId)
+        .maybeSingle();
+
+      if (conflict) {
+        // Another reservation already confirmed this booth — never double-book.
+        // Mark for manual refund so staff can action it; still return 200 to Stripe.
+        console.error(
+          "VIP double-book detected: reservation",
+          reservationId,
+          "conflicts with confirmed reservation",
+          conflict.id,
+          "— marking payment_refund_due"
+        );
+        await supabaseAdmin
+          .from("reservations")
+          .update({ status: "payment_refund_due" })
+          .eq("id", reservationId);
+      } else {
+        // Booth is still ours — confirm it
+        const { error: confirmErr } = await supabaseAdmin
+          .from("reservations")
+          .update({ status: "confirmed" })
+          .eq("id", reservationId);
+
+        if (confirmErr) {
+          console.error("VIP reservation confirm failed", confirmErr);
+          return new Response("Reservation confirm error", { status: 500 });
+        }
+      }
+
+      // c. Record payment (fatal: stripe_session_id is our idempotency key)
+      const { error: vipPayErr } = await supabaseAdmin.from("payments").insert({
+        client_id: clientId,
+        customer_id: reservation.customer_id,
+        reservation_id: reservationId,
+        stripe_session_id: session.id,
+        amount: totalAmount,
+        currency: "usd",
+        status: "succeeded",
+      });
+
+      if (vipPayErr) {
+        console.error("VIP payment record failed", vipPayErr);
+        return new Response("Payment error", { status: 500 });
+      }
+
+      return new Response("ok", { status: 200 });
+    }
+    // ── End VIP branch ─────────────────────────────────────────────────────
     const eventId = meta.event_id;
     const qty = parseInt(meta.quantity);
     const pricePerTicket = parseFloat(meta.price_per_ticket);
