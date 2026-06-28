@@ -106,6 +106,29 @@ export default async function EventDetailPage({
             </h2>
             <TicketPurchaseForm eventId={event.id} price={event.price} />
           </div>
+
+          {/* VIP upsell */}
+          <Link
+            href={`/events/${event.id}/vip`}
+            className="mt-4 flex items-center justify-between gap-4 bg-surface border border-gold/25 hover:border-gold/50 rounded-2xl px-5 py-4 transition-colors group"
+          >
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h2 className="font-display text-base font-semibold text-text">
+                  VIP Tables
+                </h2>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-gold/10 text-gold border border-gold/20 tracking-wide">
+                  VIP
+                </span>
+              </div>
+              <p className="text-text-muted text-sm">
+                Reserve a booth — $50, includes 8 entries. 1-bottle minimum.
+              </p>
+            </div>
+            <span className="text-gold/60 group-hover:text-gold text-lg transition-colors shrink-0">
+              →
+            </span>
+          </Link>
         </div>
       </main>
 
