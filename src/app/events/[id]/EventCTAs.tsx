@@ -18,17 +18,17 @@ export default function EventCTAs({
   return (
     <div className="space-y-3">
       {/* Button row */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Door Tickets — plum primary */}
+      <div className="flex gap-3">
+        {/* Door Tickets — plum tinted (Option B) */}
         <button
           type="button"
           onClick={() => setTicketsOpen((o) => !o)}
-          className="flex flex-col items-center justify-center gap-0.5 bg-plum hover:bg-plum-bright text-text font-semibold py-4 px-3 rounded-2xl transition-colors shadow-[0_0_24px_rgba(176,31,144,0.35)] text-center"
+          className="flex-1 flex flex-col items-center justify-center gap-1 bg-plum/10 border border-plum/60 shadow-[0_0_22px_rgba(176,31,144,0.18)] rounded-2xl py-4 px-3 transition-colors text-center hover:bg-plum/15 hover:border-plum/80"
         >
-          <span className="text-sm font-semibold leading-tight">
+          <span className="text-sm font-medium text-text leading-tight">
             {isFree ? "Get Free Ticket" : `Door Tickets · $${price}`}
           </span>
-          <span className="text-xs text-text/60 font-normal">
+          <span className="text-[12px] font-normal leading-tight" style={{ color: "#D8A8CC" }}>
             General entry
           </span>
         </button>
@@ -36,18 +36,18 @@ export default function EventCTAs({
         {/* VIP Reservation — gold accent */}
         <Link
           href={`/events/${eventId}/vip`}
-          className="flex flex-col items-center justify-center gap-0.5 bg-surface border border-gold/40 hover:border-gold/70 text-gold font-semibold py-4 px-3 rounded-2xl transition-colors text-center"
+          className="flex-1 flex flex-col items-center justify-center gap-1 bg-surface border border-gold/40 hover:border-gold/60 rounded-2xl py-4 px-3 transition-colors text-center"
         >
-          <span className="text-sm font-semibold leading-tight">
+          <span className="text-sm font-medium text-gold leading-tight">
             VIP Reservation · $50
           </span>
-          <span className="text-xs text-gold/50 font-normal">
+          <span className="text-[12px] font-normal leading-tight text-gold/65">
             Includes 8 entries • 1-bottle minimum
           </span>
         </Link>
       </div>
 
-      {/* Collapsible ticket form — grid-rows trick, no JS height calc */}
+      {/* Collapsible ticket form — grid-rows 0fr→1fr + opacity, no framer-motion */}
       <div
         className="grid transition-[grid-template-rows,opacity] duration-300 ease-in-out"
         style={{
