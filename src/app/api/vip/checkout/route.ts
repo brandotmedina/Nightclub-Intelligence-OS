@@ -41,12 +41,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "hold_expired" }, { status: 410 });
   }
 
-  // Load event name + booth label for the line item description
+  // Load event (name for line item + vip_enabled gate) and booth label
   const [{ data: event }, { data: booth }] = await Promise.all([
     supabaseAdmin
       .from("events")
-      .select("name")
+      .select("name, vip_enabled")
       .eq("id", reservation.event_id)
+      .eq("client_id", clientId)
       .single(),
     supabaseAdmin
       .from("booths")
@@ -55,7 +56,11 @@ export async function POST(request: Request) {
       .single(),
   ]);
 
-  const eventName = event?.name ?? "Event";
+  if (!event?.vip_enabled) {
+    return NextResponse.json({ error: "vip_not_enabled" }, { status: 403 });
+  }
+
+  const eventName = event.name ?? "Event";
   const boothLabel = booth?.label ?? "Booth";
 
   const session = await stripe.checkout.sessions.create({

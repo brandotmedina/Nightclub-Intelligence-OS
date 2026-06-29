@@ -20,6 +20,18 @@ export async function POST(request: Request) {
 
   const clientId = process.env.CLIENT_ID!;
 
+  // Gate: reject if VIP is not enabled for this event
+  const { data: eventCheck } = await supabaseAdmin
+    .from("events")
+    .select("vip_enabled")
+    .eq("id", eventId)
+    .eq("client_id", clientId)
+    .single();
+
+  if (!eventCheck?.vip_enabled) {
+    return NextResponse.json({ error: "vip_not_enabled" }, { status: 403 });
+  }
+
   // b. Find-or-create customer by phone (same pattern as ticket checkout flow)
   const { data: existingCustomer } = await supabaseAdmin
     .from("customers")
