@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
@@ -28,15 +28,16 @@ export default async function VipPage({
   const clientId = process.env.CLIENT_ID!;
   const now = new Date().toISOString();
 
-  // 1. Load event
+  // 1. Load event — includes vip_enabled to gate access
   const { data: event, error: eventErr } = await supabase
     .from("events")
-    .select("id, name, event_date")
+    .select("id, name, event_date, vip_enabled")
     .eq("client_id", clientId)
     .eq("id", eventId)
     .single();
 
   if (eventErr || !event) notFound();
+  if (!event.vip_enabled) redirect(`/events/${eventId}`);
 
   // 2. Load venue areas and booths
   const [{ data: areas }, { data: booths }] = await Promise.all([

@@ -17,7 +17,7 @@ export default async function EventDetailPage({
 
   const { data: event, error } = await supabase
     .from("events")
-    .select("id, name, event_date, price, flyer_url, dj_lineup, genre")
+    .select("id, name, event_date, price, flyer_url, dj_lineup, genre, vip_enabled")
     .eq("client_id", clientId)
     .eq("id", id)
     .single();
@@ -107,8 +107,8 @@ export default async function EventDetailPage({
             <TicketPurchaseForm eventId={event.id} price={event.price} />
           </div>
 
-          {/* VIP upsell */}
-          <Link
+          {/* VIP upsell — only shown when vip_enabled is true for this event */}
+          {event.vip_enabled && <Link
             href={`/events/${event.id}/vip`}
             className="mt-4 flex items-center justify-between gap-4 bg-surface border border-gold/25 hover:border-gold/50 rounded-2xl px-5 py-4 transition-colors group"
           >
@@ -128,7 +128,7 @@ export default async function EventDetailPage({
             <span className="text-gold/60 group-hover:text-gold text-lg transition-colors shrink-0">
               →
             </span>
-          </Link>
+          </Link>}
         </div>
       </main>
 
