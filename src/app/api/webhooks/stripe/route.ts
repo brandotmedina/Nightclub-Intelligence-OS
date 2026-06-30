@@ -110,6 +110,63 @@ export async function POST(request: Request) {
         return new Response("Payment error", { status: 500 });
       }
 
+      // d. Fire-and-forget staff alert via N8N (must be last; never blocks the 200)
+      const alertUrl = process.env.N8N_VIP_ALERT_URL;
+      if (!alertUrl) {
+        console.log("skipping VIP staff alert: N8N_VIP_ALERT_URL not set");
+      } else {
+        try {
+          const [{ data: customer }, { data: booth }, { data: eventRow }] =
+            await Promise.all([
+              supabaseAdmin
+                .from("customers")
+                .select("full_name, phone")
+                .eq("id", reservation.customer_id)
+                .eq("client_id", clientId)
+                .single(),
+              supabaseAdmin
+                .from("booths")
+                .select("label")
+                .eq("id", reservation.booth_id)
+                .eq("client_id", clientId)
+                .single(),
+              supabaseAdmin
+                .from("events")
+                .select("name, event_date")
+                .eq("id", reservation.event_id)
+                .eq("client_id", clientId)
+                .single(),
+            ]);
+
+          const payload = {
+            type: "vip_confirmed",
+            client_id: clientId,
+            reservation_id: reservationId,
+            customer_name: customer?.full_name ?? null,
+            customer_phone: customer?.phone ?? null,
+            booth_label: booth?.label ?? null,
+            event_name: eventRow?.name ?? null,
+            event_date: eventRow?.event_date ?? null,
+            amount: totalAmount,
+          };
+
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 5000);
+          try {
+            await fetch(alertUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+              signal: controller.signal,
+            });
+          } finally {
+            clearTimeout(timeout);
+          }
+        } catch (alertErr) {
+          console.error("VIP staff alert failed (non-fatal):", alertErr);
+        }
+      }
+
       return new Response("ok", { status: 200 });
     }
     // ── End VIP branch ─────────────────────────────────────────────────────
