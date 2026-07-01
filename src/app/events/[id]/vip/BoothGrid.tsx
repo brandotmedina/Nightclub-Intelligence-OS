@@ -289,9 +289,21 @@ export default function BoothGrid({
                 <p className="text-text-muted text-sm">
                   This area is available by request only.
                 </p>
-                <span className="shrink-0 text-xs font-semibold text-text-dim border border-border rounded-xl px-3 py-2 bg-surface-2">
-                  Call the venue to reserve
-                </span>
+                {(() => {
+                  const inquiryPhone = process.env.NEXT_PUBLIC_VIP_INQUIRY_PHONE;
+                  return inquiryPhone ? (
+                    <a
+                      href={`tel:${inquiryPhone}`}
+                      className="shrink-0 text-xs text-text-muted hover:text-text transition-colors underline underline-offset-2"
+                    >
+                      Call to reserve
+                    </a>
+                  ) : (
+                    <span className="shrink-0 text-xs font-semibold text-text-dim border border-border rounded-xl px-3 py-2 bg-surface-2">
+                      Call the venue to reserve
+                    </span>
+                  );
+                })()}
               </div>
             </section>
           );
