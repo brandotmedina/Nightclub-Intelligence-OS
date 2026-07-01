@@ -17,6 +17,8 @@ export type MapElement = {
 export type RoomLayout = {
   id: string;
   name: string;
+  /** Must match DB venue_areas.name exactly — used to join layout → DB booths */
+  areaName: string;
   viewBox: string;
   elements: MapElement[];
 };
@@ -31,6 +33,7 @@ export type VenueLayout = {
 const MAIN_FLOOR: RoomLayout = {
   id: "main",
   name: "Main Floor",
+  areaName: "Main Floor",
   viewBox: "0 0 100 180",
   elements: [
     // ── Top band — two full-width stacked displays ───────────────────────
@@ -74,12 +77,13 @@ const MAIN_FLOOR: RoomLayout = {
   ],
 };
 
-// Schematic layout — Baila Conmigo (Backroom).
+// Schematic layout — Backroom.
 // viewBox: "0 0 100 165" — matches Main Floor's roomy feel.
 // Content band y=17..148 (131 units). DJ top, BAR bottom, both full width.
 const BACKROOM: RoomLayout = {
   id: "backroom",
-  name: "Baila Conmigo",
+  name: "Backroom",
+  areaName: "Backroom",
   viewBox: "0 0 100 165",
   elements: [
     // ── Top / bottom full-width displays ────────────────────────────────
