@@ -12,6 +12,7 @@ type Booth = {
   id: string;
   area_id: string;
   label: string;
+  booking_mode: string; // 'online' | 'inquiry'
 };
 
 type Phase =
@@ -306,6 +307,39 @@ export default function BoothGrid({
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 {areaBooths.map((booth) => {
+                  // ── Inquiry-only booth — non-selectable, tel: link ──────────
+                  if (booth.booking_mode === "inquiry") {
+                    const inquiryPhone = process.env.NEXT_PUBLIC_VIP_INQUIRY_PHONE;
+                    return (
+                      <div
+                        key={booth.id}
+                        className="rounded-2xl border border-border bg-surface p-4 text-left opacity-80"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <span className="font-display text-base font-semibold text-text">
+                            {booth.label}
+                          </span>
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-surface-2 text-text-dim border border-border">
+                            Inquiry
+                          </span>
+                        </div>
+                        {inquiryPhone ? (
+                          <a
+                            href={`tel:${inquiryPhone}`}
+                            className="text-xs text-text-muted hover:text-text transition-colors underline underline-offset-2"
+                          >
+                            Call to reserve
+                          </a>
+                        ) : (
+                          <p className="text-xs text-text-dim">
+                            Call the venue to reserve
+                          </p>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  // ── Online booth — existing selectable card ─────────────────
                   const isTaken = localTaken.has(booth.id);
                   const isSelected = selectedBoothId === booth.id;
                   const isIdle = phase.kind === "browse";

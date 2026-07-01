@@ -17,6 +17,7 @@ type Booth = {
   id: string;
   area_id: string;
   label: string;
+  booking_mode: string;
 };
 
 export default async function VipPage({
@@ -48,7 +49,7 @@ export default async function VipPage({
       .order("name"),
     supabase
       .from("booths")
-      .select("id, area_id, label")
+      .select("id, area_id, label, booking_mode")
       .eq("client_id", clientId)
       .order("label"),
   ]);
