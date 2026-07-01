@@ -32,6 +32,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "vip_not_enabled" }, { status: 403 });
   }
 
+  // Gate: reject if booth is not online-bookable
+  const { data: boothCheck } = await supabaseAdmin
+    .from("booths")
+    .select("booking_mode")
+    .eq("id", boothId)
+    .eq("client_id", clientId)
+    .single();
+
+  if (!boothCheck || boothCheck.booking_mode !== "online") {
+    return NextResponse.json({ error: "booth_not_bookable" }, { status: 403 });
+  }
+
   // b. Find-or-create customer by phone (same pattern as ticket checkout flow)
   const { data: existingCustomer } = await supabaseAdmin
     .from("customers")
