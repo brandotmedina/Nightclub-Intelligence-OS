@@ -77,12 +77,12 @@ const MAIN_FLOOR: RoomLayout = {
   ],
 };
 
-// Schematic layout — Baila Conmigo (Backroom).
+// Schematic layout — Backroom.
 // viewBox: "0 0 100 165" — matches Main Floor's roomy feel.
 // Content band y=17..148 (131 units). DJ top, BAR bottom, both full width.
 const BACKROOM: RoomLayout = {
   id: "backroom",
-  name: "Baila Conmigo",
+  name: "Backroom",
   areaName: "Backroom",
   viewBox: "0 0 100 165",
   elements: [
