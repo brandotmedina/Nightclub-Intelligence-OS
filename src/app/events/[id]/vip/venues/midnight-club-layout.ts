@@ -69,8 +69,8 @@ const MAIN_FLOOR: RoomLayout = {
       note: "inquiry",
     },
 
-    // ── Bottom-right BAR — under Booth 9 ─────────────────────────────────
-    { kind: "display", label: "BAR", shape: "rect", x: 76, y: 140, w: 22, h: 10 },
+    // ── Bottom-right BAR — vertical rect, flush to bottom-right corner ──
+    { kind: "display", label: "BAR", shape: "rect", x: 88, y: 148, w: 10, h: 30 },
   ],
 };
 
