@@ -25,46 +25,52 @@ export type VenueLayout = {
   rooms: RoomLayout[];
 };
 
-// viewBox: "0 0 100 145" — taller portrait; booth h=22 in w=24 space ≈ square card
+// Schematic layout — forgiving grid, generous spacing, reads as the real room.
+// viewBox: "0 0 100 180" — tall portrait; 24-unit booth height reads as a card.
+// Col A ends y=174, 6 units of padding to bottom edge.
 const MAIN_FLOOR: RoomLayout = {
   id: "main",
   name: "Main Floor",
-  viewBox: "0 0 100 145",
+  viewBox: "0 0 100 180",
   elements: [
-    // ── Top displays (stacked) ───────────────────────────────────────────
-    { kind: "display", label: "DJ",  shape: "rect", x: 2, y: 2,  w: 96, h: 8 },
-    { kind: "display", label: "BAR", shape: "rect", x: 2, y: 11, w: 96, h: 8 },
+    // ── Top band — two full-width stacked displays ───────────────────────
+    { kind: "display", label: "DJ",  shape: "rect", x: 2, y: 3,  w: 96, h: 10 },
+    { kind: "display", label: "BAR", shape: "rect", x: 2, y: 15, w: 96, h: 10 },
 
-    // ── Column A — far-left wall — Booths 1–5 (top→bottom) ──────────────
-    { kind: "booth", label: "Booth 1", boothMatch: "Booth 1", shape: "rect", x: 2, y: 21,  w: 24, h: 22 },
-    { kind: "booth", label: "Booth 2", boothMatch: "Booth 2", shape: "rect", x: 2, y: 44,  w: 24, h: 22 },
-    { kind: "booth", label: "Booth 3", boothMatch: "Booth 3", shape: "rect", x: 2, y: 67,  w: 24, h: 22 },
-    { kind: "booth", label: "Booth 4", boothMatch: "Booth 4", shape: "rect", x: 2, y: 90,  w: 24, h: 22 },
-    { kind: "booth", label: "Booth 5", boothMatch: "Booth 5", shape: "rect", x: 2, y: 113, w: 24, h: 22 },
+    // ── Column A — far-left wall — Booths 1–5 ───────────────────────────
+    // x=2, w=22, h=24 each, gap=6 between rows; starts y=30
+    { kind: "booth", label: "Booth 1", boothMatch: "Booth 1", shape: "rect", x: 2, y: 30,  w: 22, h: 24 },
+    { kind: "booth", label: "Booth 2", boothMatch: "Booth 2", shape: "rect", x: 2, y: 60,  w: 22, h: 24 },
+    { kind: "booth", label: "Booth 3", boothMatch: "Booth 3", shape: "rect", x: 2, y: 90,  w: 22, h: 24 },
+    { kind: "booth", label: "Booth 4", boothMatch: "Booth 4", shape: "rect", x: 2, y: 120, w: 22, h: 24 },
+    { kind: "booth", label: "Booth 5", boothMatch: "Booth 5", shape: "rect", x: 2, y: 150, w: 22, h: 24 },
 
-    // ── Column B — staggered (aligned with B2/B3/B4 heights) ────────────
-    { kind: "booth", label: "Booth 6", boothMatch: "Booth 6", shape: "rect", x: 27, y: 44, w: 20, h: 22 },
-    { kind: "booth", label: "Booth 7", boothMatch: "Booth 7", shape: "rect", x: 27, y: 67, w: 20, h: 22 },
-    { kind: "booth", label: "Booth 8", boothMatch: "Booth 8", shape: "rect", x: 27, y: 90, w: 20, h: 22 },
+    // ── Column B — second column, aligned with B2/B3/B4 heights ─────────
+    // x=26, w=20, same row rhythm; 4-unit gap between columns
+    { kind: "booth", label: "Booth 6", boothMatch: "Booth 6", shape: "rect", x: 26, y: 60,  w: 20, h: 24 },
+    { kind: "booth", label: "Booth 7", boothMatch: "Booth 7", shape: "rect", x: 26, y: 90,  w: 20, h: 24 },
+    { kind: "booth", label: "Booth 8", boothMatch: "Booth 8", shape: "rect", x: 26, y: 120, w: 20, h: 24 },
 
-    // ── Center — dance floor ─────────────────────────────────────────────
-    { kind: "display", label: "DANCE FLOOR", shape: "rect", x: 49, y: 21, w: 16, h: 114 },
+    // ── Centre — dance floor block ───────────────────────────────────────
+    // 24 units wide, full content height — real presence
+    { kind: "display", label: "DANCE FLOOR", shape: "rect", x: 50, y: 30, w: 24, h: 118 },
 
-    // ── Booth 9 — tall oval, far right (inquiry) ─────────────────────────
+    // ── Booth 9 — tall private oval, far right (inquiry) ─────────────────
+    // 22×96 ellipse — largest element, clearly premium
     {
       kind: "booth",
       label: "Booth 9",
       boothMatch: "Booth 9",
       shape: "ellipse",
-      x: 67,
-      y: 32,
-      w: 30,
-      h: 80,
+      x: 76,
+      y: 40,
+      w: 22,
+      h: 96,
       note: "inquiry",
     },
 
-    // ── Bottom-right BAR — directly under Booth 9 ────────────────────────
-    { kind: "display", label: "BAR", shape: "rect", x: 67, y: 114, w: 30, h: 9 },
+    // ── Bottom-right BAR — under Booth 9 ─────────────────────────────────
+    { kind: "display", label: "BAR", shape: "rect", x: 76, y: 140, w: 22, h: 10 },
   ],
 };
 
