@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import FloorMap from "./FloorMap";
+import { midnightClubLayout } from "./venues/midnight-club-layout";
 
 type Area = {
   id: string;
@@ -76,6 +78,7 @@ export default function BoothGrid({
   const [localTaken, setLocalTaken] = useState<Set<string>>(
     () => new Set(takenBoothIdList)
   );
+  const [activeRoom, setActiveRoom] = useState(midnightClubLayout.rooms[0].id);
 
   // Form fields
   const [name, setName] = useState("");
@@ -271,133 +274,53 @@ export default function BoothGrid({
         </p>
       )}
 
-      {areas.map((area) => {
-        const areaBooths = boothsByArea.get(area.id) ?? [];
-
-        if (!area.is_bookable) {
-          return (
-            <section key={area.id}>
-              <div className="flex items-center gap-2 mb-3">
-                <h2 className="font-display text-base font-semibold text-text">
-                  {area.name}
-                </h2>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-surface-2 text-text-dim border border-border">
-                  Inquiry only
-                </span>
-              </div>
-              <div className="bg-surface border border-border rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
-                <p className="text-text-muted text-sm">
-                  This area is available by request only.
-                </p>
-                {(() => {
-                  const inquiryPhone = process.env.NEXT_PUBLIC_VIP_INQUIRY_PHONE;
-                  return inquiryPhone ? (
-                    <a
-                      href={`tel:${inquiryPhone}`}
-                      className="shrink-0 text-xs text-text-muted hover:text-text transition-colors underline underline-offset-2"
-                    >
-                      Call to reserve
-                    </a>
-                  ) : (
-                    <span className="shrink-0 text-xs font-semibold text-text-dim border border-border rounded-xl px-3 py-2 bg-surface-2">
-                      Call the venue to reserve
-                    </span>
-                  );
-                })()}
-              </div>
-            </section>
-          );
-        }
-
-        return (
-          <section key={area.id}>
-            <h2 className="font-display text-base font-semibold text-text mb-3">
+      {/* Non-bookable area inquiry panels (e.g. Patio Lounge) */}
+      {areas.filter((area) => !area.is_bookable).map((area) => (
+        <section key={area.id}>
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="font-display text-base font-semibold text-text">
               {area.name}
             </h2>
-            {areaBooths.length === 0 ? (
-              <p className="text-text-dim text-sm">No booths listed for this area.</p>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {areaBooths.map((booth) => {
-                  // ── Inquiry-only booth — non-selectable, tel: link ──────────
-                  if (booth.booking_mode === "inquiry") {
-                    const inquiryPhone = process.env.NEXT_PUBLIC_VIP_INQUIRY_PHONE;
-                    return (
-                      <div
-                        key={booth.id}
-                        className="rounded-2xl border border-border bg-surface p-4 text-left opacity-80"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <span className="font-display text-base font-semibold text-text">
-                            {booth.label}
-                          </span>
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-surface-2 text-text-dim border border-border">
-                            Inquiry
-                          </span>
-                        </div>
-                        {inquiryPhone ? (
-                          <a
-                            href={`tel:${inquiryPhone}`}
-                            className="text-xs text-text-muted hover:text-text transition-colors underline underline-offset-2"
-                          >
-                            Call to reserve
-                          </a>
-                        ) : (
-                          <p className="text-xs text-text-dim">
-                            Call the venue to reserve
-                          </p>
-                        )}
-                      </div>
-                    );
-                  }
+            <span className="text-xs px-2 py-0.5 rounded-full bg-surface-2 text-text-dim border border-border">
+              Inquiry only
+            </span>
+          </div>
+          <div className="bg-surface border border-border rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
+            <p className="text-text-muted text-sm">
+              This area is available by request only.
+            </p>
+            {(() => {
+              const inquiryPhone = process.env.NEXT_PUBLIC_VIP_INQUIRY_PHONE;
+              return inquiryPhone ? (
+                <a
+                  href={`tel:${inquiryPhone}`}
+                  className="shrink-0 text-xs text-text-muted hover:text-text transition-colors underline underline-offset-2"
+                >
+                  Call to reserve
+                </a>
+              ) : (
+                <span className="shrink-0 text-xs font-semibold text-text-dim border border-border rounded-xl px-3 py-2 bg-surface-2">
+                  Call the venue to reserve
+                </span>
+              );
+            })()}
+          </div>
+        </section>
+      ))}
 
-                  // ── Online booth — existing selectable card ─────────────────
-                  const isTaken = localTaken.has(booth.id);
-                  const isSelected = selectedBoothId === booth.id;
-                  const isIdle = phase.kind === "browse";
-
-                  return (
-                    <button
-                      key={booth.id}
-                      type="button"
-                      disabled={isTaken || !isIdle}
-                      onClick={() => handleSelectBooth(booth.id)}
-                      className={[
-                        "rounded-2xl border p-4 text-left transition-all",
-                        isTaken
-                          ? "bg-surface border-border opacity-40 cursor-not-allowed"
-                          : isSelected
-                          ? "bg-plum/10 border-plum shadow-[0_0_18px_rgba(176,31,144,0.25)] cursor-pointer"
-                          : !isIdle
-                          ? "bg-surface border-border opacity-50 cursor-not-allowed"
-                          : "bg-surface border-border hover:border-plum/40 cursor-pointer",
-                      ].join(" ")}
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <span className="font-display text-base font-semibold text-text">
-                          {booth.label}
-                        </span>
-                        <span
-                          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            isTaken
-                              ? "bg-surface-2 text-text-dim border border-border"
-                              : "bg-success/10 text-success border border-success/20"
-                          }`}
-                        >
-                          {isTaken ? "Taken" : "Open"}
-                        </span>
-                      </div>
-                      <p className="text-text-muted text-xs">
-                        ${BOOTH_FEE} min · {ENTRIES_INCLUDED} entries
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        );
-      })}
+      {/* Interactive floor map — replaces the booth-card grid */}
+      <FloorMap
+        layout={midnightClubLayout}
+        activeRoom={activeRoom}
+        onRoomChange={setActiveRoom}
+        areas={areas}
+        booths={booths}
+        selectedBoothId={selectedBoothId}
+        takenBoothIds={localTaken}
+        onBoothSelect={handleSelectBooth}
+        isIdle={phase.kind === "browse"}
+        inquiryPhone={process.env.NEXT_PUBLIC_VIP_INQUIRY_PHONE}
+      />
 
       {/* Sticky bottom — identity form + reserve */}
       <div className="fixed bottom-0 inset-x-0 z-30 pointer-events-none">
