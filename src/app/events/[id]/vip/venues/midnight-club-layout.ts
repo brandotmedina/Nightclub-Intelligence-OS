@@ -74,111 +74,34 @@ const MAIN_FLOOR: RoomLayout = {
   ],
 };
 
+// Schematic layout — Baila Conmigo (Backroom).
+// viewBox: "0 0 100 165" — matches Main Floor's roomy feel.
+// Content band y=17..148 (131 units). DJ top, BAR bottom, both full width.
 const BACKROOM: RoomLayout = {
   id: "backroom",
-  name: "Backroom",
-  viewBox: "0 0 100 140",
+  name: "Baila Conmigo",
+  viewBox: "0 0 100 165",
   elements: [
-    // ── Scenery ─────────────────────────────────────────────────────────────
-    { kind: "display", label: "BAR", shape: "rect", x: 2, y: 2, w: 96, h: 12 },
-    {
-      kind: "display",
-      label: "VIP TABLES",
-      shape: "rect",
-      x: 30,
-      y: 60,
-      w: 40,
-      h: 30,
-    },
+    // ── Top / bottom full-width displays ────────────────────────────────
+    { kind: "display", label: "DJ",  shape: "rect", x: 2, y: 3,   w: 96, h: 10 },
+    { kind: "display", label: "BAR", shape: "rect", x: 2, y: 153, w: 96, h: 10 },
 
-    // ── Standing tables — left column (5 circles) ─────────────────────────
-    {
-      kind: "display",
-      label: "Open seating",
-      shape: "ellipse",
-      x: 8,
-      y: 20,
-      w: 14,
-      h: 14,
-    },
-    {
-      kind: "display",
-      label: "Open seating",
-      shape: "ellipse",
-      x: 8,
-      y: 38,
-      w: 14,
-      h: 14,
-    },
-    {
-      kind: "display",
-      label: "Open seating",
-      shape: "ellipse",
-      x: 8,
-      y: 56,
-      w: 14,
-      h: 14,
-    },
-    {
-      kind: "display",
-      label: "Open seating",
-      shape: "ellipse",
-      x: 8,
-      y: 74,
-      w: 14,
-      h: 14,
-    },
-    {
-      kind: "display",
-      label: "Open seating",
-      shape: "ellipse",
-      x: 8,
-      y: 92,
-      w: 14,
-      h: 14,
-    },
+    // ── Left column — 4 open-seating circles (scenery, non-bookable) ────
+    // x=3, w=14, h=14 (~circular); gap=15 between rows
+    { kind: "display", label: "Open seating", shape: "ellipse", x: 3, y: 32,  w: 14, h: 14 },
+    { kind: "display", label: "Open seating", shape: "ellipse", x: 3, y: 61,  w: 14, h: 14 },
+    { kind: "display", label: "Open seating", shape: "ellipse", x: 3, y: 90,  w: 14, h: 14 },
+    { kind: "display", label: "Open seating", shape: "ellipse", x: 3, y: 119, w: 14, h: 14 },
 
-    // ── Right column — Booths 1–4 (Backroom) ────────────────────────────
-    {
-      kind: "booth",
-      label: "Booth 1",
-      boothMatch: "Booth 1",
-      shape: "rect",
-      x: 72,
-      y: 20,
-      w: 26,
-      h: 16,
-    },
-    {
-      kind: "booth",
-      label: "Booth 2",
-      boothMatch: "Booth 2",
-      shape: "rect",
-      x: 72,
-      y: 40,
-      w: 26,
-      h: 16,
-    },
-    {
-      kind: "booth",
-      label: "Booth 3",
-      boothMatch: "Booth 3",
-      shape: "rect",
-      x: 72,
-      y: 60,
-      w: 26,
-      h: 16,
-    },
-    {
-      kind: "booth",
-      label: "Booth 4",
-      boothMatch: "Booth 4",
-      shape: "rect",
-      x: 72,
-      y: 80,
-      w: 26,
-      h: 16,
-    },
+    // ── Center — dance floor block (full content height) ─────────────────
+    { kind: "display", label: "DANCE FLOOR", shape: "rect", x: 20, y: 17, w: 36, h: 131 },
+
+    // ── Right column — Booths 1–4 (evenly spaced, gap=7) ─────────────────
+    // x=60, w=22, h=24; y: 24/55/86/117
+    { kind: "booth", label: "Booth 1", boothMatch: "Booth 1", shape: "rect", x: 60, y: 24,  w: 22, h: 24 },
+    { kind: "booth", label: "Booth 2", boothMatch: "Booth 2", shape: "rect", x: 60, y: 55,  w: 22, h: 24 },
+    { kind: "booth", label: "Booth 3", boothMatch: "Booth 3", shape: "rect", x: 60, y: 86,  w: 22, h: 24 },
+    { kind: "booth", label: "Booth 4", boothMatch: "Booth 4", shape: "rect", x: 60, y: 117, w: 22, h: 24 },
   ],
 };
 
