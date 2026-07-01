@@ -51,8 +51,9 @@ export async function POST(request: Request) {
       .single(),
     supabaseAdmin
       .from("booths")
-      .select("label")
+      .select("label, booking_mode")
       .eq("id", reservation.booth_id)
+      .eq("client_id", clientId)
       .single(),
   ]);
 
@@ -60,8 +61,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "vip_not_enabled" }, { status: 403 });
   }
 
+  // Gate: reject if booth is not online-bookable
+  if (!booth || booth.booking_mode !== "online") {
+    return NextResponse.json({ error: "booth_not_bookable" }, { status: 403 });
+  }
+
   const eventName = event.name ?? "Event";
-  const boothLabel = booth?.label ?? "Booth";
+  const boothLabel = booth.label ?? "Booth";
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
