@@ -184,23 +184,35 @@ export default function FloorMap({
   areas, booths,
   selectedBoothId, takenBoothIds, onBoothSelect, isIdle, inquiryPhone,
 }: Props) {
-  const room = layout.rooms.find((r) => r.id === activeRoom) ?? layout.rooms[0];
+  // "patio" is a synthetic tab — no layout room, no map, call-only panel
+  const PATIO_ID = "patio";
+  const isPatio = activeRoom === PATIO_ID;
 
-  // Resolve DB area for this room, then narrow booths to that area
-  const dbArea = areas.find((a) => a.name === room.areaName);
+  const room = !isPatio
+    ? (layout.rooms.find((r) => r.id === activeRoom) ?? layout.rooms[0])
+    : null;
+
+  // Resolve DB area for the active map room, then narrow booths to that area
+  const dbArea = room ? areas.find((a) => a.name === room.areaName) : null;
   const roomBooths = dbArea ? booths.filter((b) => b.area_id === dbArea.id) : [];
+
+  // All tabs: layout rooms + Patio synthetic tab
+  const tabs = [
+    ...layout.rooms.map((r) => ({ id: r.id, label: r.name })),
+    { id: PATIO_ID, label: "Patio Lounge" },
+  ];
 
   return (
     <div className="mb-6">
-      {/* Room toggle */}
+      {/* Room / area toggle — 3 tabs */}
       <div className="flex gap-2 mb-3">
-        {layout.rooms.map((r) => {
-          const isActive = r.id === activeRoom;
+        {tabs.map((tab) => {
+          const isActive = tab.id === activeRoom;
           return (
             <button
-              key={r.id}
+              key={tab.id}
               type="button"
-              onClick={() => onRoomChange(r.id)}
+              onClick={() => onRoomChange(tab.id)}
               className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors"
               style={
                 isActive
@@ -208,87 +220,139 @@ export default function FloorMap({
                   : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.4)" }
               }
             >
-              {r.name}
+              {tab.label}
             </button>
           );
         })}
       </div>
 
+      {/* Patio tab — call-only panel, no map */}
+      {isPatio && (
+        <div style={{
+          background: "rgba(255,255,255,0.02)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "10px",
+          padding: "28px 20px",
+          textAlign: "center",
+        }}>
+          <p style={{ color: "rgba(212,175,55,0.75)", fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "8px" }}>
+            Patio Lounge
+          </p>
+          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "0.875rem", marginBottom: "20px" }}>
+            Available by request only
+          </p>
+          {inquiryPhone ? (
+            <a
+              href={`tel:${inquiryPhone}`}
+              style={{
+                display: "inline-block",
+                background: "rgba(212,175,55,0.1)",
+                border: "1px solid rgba(212,175,55,0.35)",
+                color: "rgba(212,175,55,0.9)",
+                borderRadius: "12px",
+                padding: "12px 24px",
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              Call to reserve
+            </a>
+          ) : (
+            <span style={{
+              display: "inline-block",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.4)",
+              borderRadius: "12px",
+              padding: "12px 24px",
+              fontSize: "0.875rem",
+            }}>
+              Call the venue to reserve
+            </span>
+          )}
+        </div>
+      )}
+
       {/* SVG floor map — fit-to-width, entire room visible, no scroll */}
-      <div style={{
-        background: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "10px",
-        overflow: "hidden",
-      }}>
-        <svg
-          viewBox={room.viewBox}
-          width="100%"
-          style={{ display: "block" }}
-          preserveAspectRatio="xMidYMid meet"
-        >
-          <defs>
-            {/* Plum glow for selected booths */}
-            <filter id="plum-glow" x="-40%" y="-40%" width="180%" height="180%">
-              <feDropShadow dx="0" dy="0" stdDeviation="2.5"
-                floodColor="rgba(176,31,144,0.6)" floodOpacity="1" />
-            </filter>
-          </defs>
+      {!isPatio && room && (
+        <>
+          <div style={{
+            background: "rgba(255,255,255,0.02)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "10px",
+            overflow: "hidden",
+          }}>
+            <svg
+              viewBox={room.viewBox}
+              width="100%"
+              style={{ display: "block" }}
+              preserveAspectRatio="xMidYMid meet"
+            >
+              <defs>
+                {/* Plum glow for selected booths */}
+                <filter id="plum-glow" x="-40%" y="-40%" width="180%" height="180%">
+                  <feDropShadow dx="0" dy="0" stdDeviation="2.5"
+                    floodColor="rgba(176,31,144,0.6)" floodOpacity="1" />
+                </filter>
+              </defs>
 
-          {room.elements.map((el, i) => {
-            // Scenery — purely presentational
-            if (el.kind === "display") return <SceneryShape key={i} el={el} />;
+              {room.elements.map((el, i) => {
+                // Scenery — purely presentational
+                if (el.kind === "display") return <SceneryShape key={i} el={el} />;
 
-            // Booth — must have a boothMatch
-            if (!el.boothMatch) return null;
+                // Booth — must have a boothMatch
+                if (!el.boothMatch) return null;
 
-            // Resolve DB booth by label within this room's area
-            const booth = roomBooths.find((b) => b.label === el.boothMatch);
+                // Resolve DB booth by label within this room's area
+                const booth = roomBooths.find((b) => b.label === el.boothMatch);
 
-            if (!booth) {
-              const warnKey = `${room.id}:${el.boothMatch}`;
-              if (!warnedMatches.has(warnKey)) {
-                console.warn(
-                  `FloorMap: no DB booth found for boothMatch="${el.boothMatch}" ` +
-                  `in room "${room.id}" (areaName="${room.areaName}"). ` +
-                  `Rendering inert. Check that venue_areas.name matches the layout areaName.`
+                if (!booth) {
+                  const warnKey = `${room.id}:${el.boothMatch}`;
+                  if (!warnedMatches.has(warnKey)) {
+                    console.warn(
+                      `FloorMap: no DB booth found for boothMatch="${el.boothMatch}" ` +
+                      `in room "${room.id}" (areaName="${room.areaName}"). ` +
+                      `Rendering inert. Check that venue_areas.name matches the layout areaName.`
+                    );
+                    warnedMatches.add(warnKey);
+                  }
+                  return <BoothShape key={i} el={el} status="inert" />;
+                }
+
+                // Inquiry booth (e.g. Booth 9) — tel: link, never enters booking flow
+                if (booth.booking_mode === "inquiry") {
+                  return (
+                    <BoothShape
+                      key={i} el={el} status="inquiry"
+                      inquiryPhone={inquiryPhone}
+                    />
+                  );
+                }
+
+                // Online booth — derive status from passed-in props only
+                const isTaken = takenBoothIds.has(booth.id);
+                const isSelected = selectedBoothId === booth.id;
+                const status: BoothStatus = isTaken ? "taken" : isSelected ? "selected" : "available";
+                const canTap = isIdle && !isTaken;
+
+                return (
+                  <BoothShape
+                    key={i}
+                    el={el}
+                    status={status}
+                    onClick={canTap ? () => onBoothSelect(booth.id) : undefined}
+                  />
                 );
-                warnedMatches.add(warnKey);
-              }
-              return <BoothShape key={i} el={el} status="inert" />;
-            }
+              })}
+            </svg>
+          </div>
 
-            // Inquiry booth (e.g. Booth 9) — tel: link, never enters booking flow
-            if (booth.booking_mode === "inquiry") {
-              return (
-                <BoothShape
-                  key={i} el={el} status="inquiry"
-                  inquiryPhone={inquiryPhone}
-                />
-              );
-            }
-
-            // Online booth — derive status from passed-in props only
-            const isTaken = takenBoothIds.has(booth.id);
-            const isSelected = selectedBoothId === booth.id;
-            const status: BoothStatus = isTaken ? "taken" : isSelected ? "selected" : "available";
-            const canTap = isIdle && !isTaken;
-
-            return (
-              <BoothShape
-                key={i}
-                el={el}
-                status={status}
-                onClick={canTap ? () => onBoothSelect(booth.id) : undefined}
-              />
-            );
-          })}
-        </svg>
-      </div>
-
-      <p className="text-center text-xs mt-2" style={{ color: "rgba(255,255,255,0.22)" }}>
-        Tap an available booth to reserve
-      </p>
+          <p className="text-center text-xs mt-2" style={{ color: "rgba(255,255,255,0.22)" }}>
+            Tap an available booth to reserve
+          </p>
+        </>
+      )}
     </div>
   );
 }

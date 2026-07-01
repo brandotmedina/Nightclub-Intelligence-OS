@@ -274,41 +274,7 @@ export default function BoothGrid({
         </p>
       )}
 
-      {/* Non-bookable area inquiry panels (e.g. Patio Lounge) */}
-      {areas.filter((area) => !area.is_bookable).map((area) => (
-        <section key={area.id}>
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="font-display text-base font-semibold text-text">
-              {area.name}
-            </h2>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-surface-2 text-text-dim border border-border">
-              Inquiry only
-            </span>
-          </div>
-          <div className="bg-surface border border-border rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
-            <p className="text-text-muted text-sm">
-              This area is available by request only.
-            </p>
-            {(() => {
-              const inquiryPhone = process.env.NEXT_PUBLIC_VIP_INQUIRY_PHONE;
-              return inquiryPhone ? (
-                <a
-                  href={`tel:${inquiryPhone}`}
-                  className="shrink-0 text-xs text-text-muted hover:text-text transition-colors underline underline-offset-2"
-                >
-                  Call to reserve
-                </a>
-              ) : (
-                <span className="shrink-0 text-xs font-semibold text-text-dim border border-border rounded-xl px-3 py-2 bg-surface-2">
-                  Call the venue to reserve
-                </span>
-              );
-            })()}
-          </div>
-        </section>
-      ))}
-
-      {/* Interactive floor map — replaces the booth-card grid */}
+      {/* Interactive floor map — Patio Lounge tab is inside FloorMap */}
       <FloorMap
         layout={midnightClubLayout}
         activeRoom={activeRoom}

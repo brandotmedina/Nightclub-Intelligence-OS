@@ -83,7 +83,7 @@ const MAIN_FLOOR: RoomLayout = {
 const BACKROOM: RoomLayout = {
   id: "backroom",
   name: "Baila Conmigo",
-  areaName: "Baila Conmigo",
+  areaName: "Backroom",
   viewBox: "0 0 100 165",
   elements: [
     // ── Top / bottom full-width displays ────────────────────────────────
