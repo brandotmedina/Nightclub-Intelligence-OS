@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { formatEventDate } from "@/lib/formatEvent";
 import BoothGrid from "./BoothGrid";
+import FloorMapShell from "./FloorMapShell";
 
 export const dynamic = "force-dynamic";
 
@@ -107,6 +108,9 @@ export default async function VipPage({
           </div>
           <p className="text-text-muted text-sm">{event.name}</p>
         </div>
+
+        {/* Static floor map (Slice A — preview only, no selection) */}
+        <FloorMapShell />
 
         {/* Booth grid (client component for selection state) */}
         <BoothGrid
