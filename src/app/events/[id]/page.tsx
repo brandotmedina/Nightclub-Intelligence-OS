@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { formatEventDate } from "@/lib/formatEvent";
 import TicketPurchaseForm from "./TicketPurchaseForm";
 import EventCTAs from "./EventCTAs";
+import AttributionCapture from "./AttributionCapture";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function EventDetailPage({
 
   return (
     <>
+      <AttributionCapture />
       <main className={`min-h-screen bg-bg text-text ${event.vip_enabled ? "pb-8" : "pb-28"}`}>
         <div className="max-w-lg mx-auto px-4 pt-6 pb-6">
           {/* Back link */}
