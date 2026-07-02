@@ -6,12 +6,14 @@ export type MapElement = {
   label?: string;
   /** DB booths.label value — used by Slice B to wire tap → reserve flow */
   boothMatch?: string;
-  shape: "rect" | "ellipse";
+  shape: "rect" | "ellipse" | "arc";
   x: number;
   y: number;
   w: number;
   h: number;
   note?: string;
+  /** Only for shape "arc": "down" = flat top dips down; "up" = flat bottom bows up */
+  curve?: "down" | "up";
 };
 
 export type RoomLayout = {
@@ -36,9 +38,9 @@ const MAIN_FLOOR: RoomLayout = {
   areaName: "Main Floor",
   viewBox: "0 0 100 180",
   elements: [
-    // ── Top band — two full-width stacked displays ───────────────────────
-    { kind: "display", label: "DJ",  shape: "rect", x: 2, y: 3,  w: 96, h: 10 },
-    { kind: "display", label: "BAR", shape: "rect", x: 2, y: 15, w: 96, h: 10 },
+    // ── Top band — DJ rect + BAR arc, both spanning booth columns only ──
+    { kind: "display", label: "DJ",  shape: "rect", x: 24, y: 3,  w: 52, h: 10 },
+    { kind: "display", label: "BAR", shape: "arc",  x: 24, y: 15, w: 52, h: 10, curve: "down" },
 
     // ── Column A — far-left wall — Booths 1–5 ───────────────────────────
     // x=2, w=22, h=24 each, gap=6 between rows; starts y=30
@@ -86,9 +88,9 @@ const BACKROOM: RoomLayout = {
   areaName: "Backroom",
   viewBox: "0 0 100 165",
   elements: [
-    // ── Top / bottom full-width displays ────────────────────────────────
+    // ── Top / bottom displays — DJ full width, BAR arc spanning content ──
     { kind: "display", label: "DJ",  shape: "rect", x: 2, y: 3,   w: 96, h: 10 },
-    { kind: "display", label: "BAR", shape: "rect", x: 2, y: 153, w: 96, h: 10 },
+    { kind: "display", label: "BAR", shape: "arc",  x: 20, y: 153, w: 62, h: 10, curve: "up" },
 
     // ── Left column — 4 open-seating circles (scenery, non-bookable) ────
     // x=3, w=14, h=14 (~circular); gap=15 between rows

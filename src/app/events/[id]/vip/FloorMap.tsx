@@ -78,6 +78,24 @@ function SceneryShape({ el }: { el: MapElement }) {
     );
   }
 
+  if (el.shape === "arc") {
+    // curve "down": flat top edge, quadratic dips downward
+    // curve "up":   flat bottom edge, quadratic bows upward
+    const d = el.curve === "down"
+      ? `M ${el.x} ${el.y} L ${el.x + el.w} ${el.y} Q ${el.x + el.w / 2} ${el.y + 2 * el.h} ${el.x} ${el.y} Z`
+      : `M ${el.x} ${el.y + el.h} L ${el.x + el.w} ${el.y + el.h} Q ${el.x + el.w / 2} ${el.y - el.h} ${el.x} ${el.y + el.h} Z`;
+    return (
+      <g>
+        <path d={d} fill={FILL.display} stroke={STROKE.display} strokeWidth="0.6" />
+        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle"
+          fontSize={fontSize} fill={LABEL_FILL.display} fontFamily="inherit"
+          letterSpacing="0.04em">
+          {el.label}
+        </text>
+      </g>
+    );
+  }
+
   return (
     <g>
       <rect x={el.x} y={el.y} width={el.w} height={el.h} rx="1.5"
