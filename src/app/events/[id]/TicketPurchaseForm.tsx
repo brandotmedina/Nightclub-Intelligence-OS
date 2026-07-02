@@ -34,6 +34,14 @@ export default function TicketPurchaseForm({
     setLoading(true);
     setError(null);
 
+    let attribution: Record<string, string> = {};
+    try {
+      const raw = localStorage.getItem("mc_attribution");
+      if (raw) attribution = JSON.parse(raw);
+    } catch {
+      // localStorage unavailable or invalid JSON — proceed without attribution
+    }
+
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -44,6 +52,7 @@ export default function TicketPurchaseForm({
           customerName: name,
           customerPhone: phone,
           customerEmail: email,
+          attribution,
         }),
       });
 

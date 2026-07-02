@@ -219,6 +219,18 @@ export async function POST(request: Request) {
         tax: taxAmount,
         fee: feeAmount,
         status: "paid",
+        utm_source:       (meta.utm_source       || null),
+        utm_medium:       (meta.utm_medium       || null),
+        utm_campaign:     (meta.utm_campaign     || null),
+        utm_content:      (meta.utm_content      || null),
+        utm_term:         (meta.utm_term         || null),
+        meta_campaign_id: (meta.meta_campaign_id || null),
+        meta_adset_id:    (meta.meta_adset_id    || null),
+        meta_ad_id:       (meta.meta_ad_id       || null),
+        meta_placement:   (meta.meta_placement   || null),
+        fbclid:           (meta.fbclid           || null),
+        landing_page:     (meta.landing_page     || null),
+        referrer:         (meta.referrer         || null),
       })
       .select("id")
       .single();

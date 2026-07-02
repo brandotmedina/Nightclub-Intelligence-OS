@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const { eventId, quantity, customerName, customerPhone, customerEmail } =
+  const { eventId, quantity, customerName, customerPhone, customerEmail, attribution = {} } =
     await request.json();
 
   const clientId = process.env.CLIENT_ID!;
@@ -124,6 +124,18 @@ export async function POST(request: Request) {
       price_per_ticket: String(event.price),
       tax_cents: String(taxCents),
       fee_cents: String(feeCents),
+      utm_source:       String(attribution?.utm_source    ?? ""),
+      utm_medium:       String(attribution?.utm_medium    ?? ""),
+      utm_campaign:     String(attribution?.utm_campaign  ?? ""),
+      utm_content:      String(attribution?.utm_content   ?? ""),
+      utm_term:         String(attribution?.utm_term      ?? ""),
+      meta_campaign_id: String(attribution?.campaign_id  ?? ""),
+      meta_adset_id:    String(attribution?.adset_id     ?? ""),
+      meta_ad_id:       String(attribution?.ad_id        ?? ""),
+      meta_placement:   String(attribution?.placement    ?? ""),
+      fbclid:           String(attribution?.fbclid       ?? ""),
+      landing_page:     String(attribution?.landing_page ?? ""),
+      referrer:         String(attribution?.referrer     ?? ""),
     },
     success_url: `${origin}/events/${eventId}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/events/${eventId}`,
