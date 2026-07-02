@@ -178,6 +178,7 @@ function BoothShape({ el, status, onClick, inquiryPhone }: BoothShapeProps) {
     <g opacity={opacity} filter={filter} style={{ cursor }} onClick={onClick}>
       <rect x={el.x} y={el.y} width={el.w} height={el.h} rx="2"
         fill={fill} stroke={stroke} strokeWidth={strokeWidth}
+        pointerEvents={status === "inquiry" ? "all" : undefined}
       />
       <text
         x={cx} y={subLabel ? cy - 3.5 : cy}
