@@ -30,7 +30,7 @@ const FILL: Record<BoothStatus | "display", string> = {
   available: "rgba(255,255,255,0.06)",
   selected:  "rgba(176,31,144,0.15)",
   taken:     "rgba(255,255,255,0.02)",
-  inquiry:   "rgba(212,175,55,0.06)",
+  inquiry:   "rgba(255,255,255,0.06)",
   inert:     "rgba(255,255,255,0.04)",
   display:   "rgba(255,255,255,0.04)",
 };
@@ -39,7 +39,7 @@ const STROKE: Record<BoothStatus | "display", string> = {
   available: "rgba(255,255,255,0.22)",
   selected:  "rgba(176,31,144,0.85)",
   taken:     "rgba(255,255,255,0.08)",
-  inquiry:   "rgba(212,175,55,0.5)",
+  inquiry:   "rgba(255,255,255,0.22)",
   inert:     "rgba(255,255,255,0.14)",
   display:   "rgba(255,255,255,0.12)",
 };
@@ -48,7 +48,7 @@ const LABEL_FILL: Record<BoothStatus | "display", string> = {
   available: "rgba(255,255,255,0.75)",
   selected:  "rgba(255,255,255,0.95)",
   taken:     "rgba(255,255,255,0.28)",
-  inquiry:   "rgba(212,175,55,0.85)",
+  inquiry:   "rgba(255,255,255,0.75)",
   inert:     "rgba(255,255,255,0.35)",
   display:   "rgba(255,255,255,0.30)",
 };

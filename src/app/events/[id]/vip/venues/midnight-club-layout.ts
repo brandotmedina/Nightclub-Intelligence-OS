@@ -58,17 +58,16 @@ const MAIN_FLOOR: RoomLayout = {
     // 24 units wide, full content height — real presence
     { kind: "display", label: "DANCE FLOOR", shape: "rect", x: 50, y: 30, w: 24, h: 118 },
 
-    // ── Booth 9 — tall private oval, far right (inquiry) ─────────────────
-    // 22×96 ellipse — largest element, clearly premium
+    // ── Booth 9 — right column, inquiry rect spanning B6→B8 heights ──────
     {
       kind: "booth",
       label: "Booth 9",
       boothMatch: "Booth 9",
-      shape: "ellipse",
+      shape: "rect",
       x: 76,
-      y: 40,
+      y: 60,
       w: 22,
-      h: 96,
+      h: 84,
       note: "inquiry",
     },
 
