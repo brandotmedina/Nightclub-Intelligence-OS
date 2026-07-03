@@ -15,12 +15,20 @@ export default function Home() {
           Where the night begins.
         </p>
 
-        <Link
-          href="/events"
-          className="block w-full bg-plum hover:bg-plum-bright text-text font-semibold py-4 rounded-2xl transition-colors text-center shadow-[0_0_28px_rgba(176,31,144,0.35)]"
-        >
-          View Upcoming Events
-        </Link>
+        <div className="space-y-3">
+          <Link
+            href="/events"
+            className="block w-full bg-plum hover:bg-plum-bright text-text font-semibold py-4 rounded-2xl transition-colors text-center shadow-[0_0_28px_rgba(176,31,144,0.35)]"
+          >
+            Upcoming Events
+          </Link>
+          <Link
+            href="/midnight-club/albums"
+            className="block w-full bg-surface border border-border hover:border-plum/40 text-text font-semibold py-4 rounded-2xl transition-colors text-center"
+          >
+            Photo Albums
+          </Link>
+        </div>
       </div>
     </main>
   );
