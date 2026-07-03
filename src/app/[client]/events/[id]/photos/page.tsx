@@ -30,12 +30,12 @@ export default async function PhotoAlbumPage({
 
   const album = albums?.[0] ?? null;
 
-  let photos: { id: string; thumbnail_url: string; full_url: string; caption: string | null }[] = [];
+  let photos: { id: string; thumbnail_url: string; full_url: string }[] = [];
 
   if (album) {
     const { data } = await supabase
       .from("photos")
-      .select("id, thumbnail_url, full_url, caption")
+      .select("id, thumbnail_url, full_url")
       .eq("album_id", album.id)
       .order("sort_order", { ascending: true });
     photos = data ?? [];

@@ -7,7 +7,6 @@ type Photo = {
   id: string;
   thumbnail_url: string;
   full_url: string;
-  caption: string | null;
 };
 
 export default function PhotoGrid({ photos }: { photos: Photo[] }) {
@@ -25,7 +24,7 @@ export default function PhotoGrid({ photos }: { photos: Photo[] }) {
           >
             <Image
               src={photo.thumbnail_url}
-              alt={photo.caption ?? ""}
+              alt=""
               width={400}
               height={400}
               className="w-full h-full object-cover"
@@ -54,17 +53,12 @@ export default function PhotoGrid({ photos }: { photos: Photo[] }) {
           >
             <Image
               src={active.full_url}
-              alt={active.caption ?? ""}
+              alt=""
               width={1200}
               height={1600}
               className="max-w-[95vw] max-h-[90vh] object-contain rounded-xl"
               priority
             />
-            {active.caption && (
-              <p className="absolute bottom-0 inset-x-0 text-center text-white/80 text-sm px-4 py-3 bg-gradient-to-t from-black/60 to-transparent rounded-b-xl">
-                {active.caption}
-              </p>
-            )}
           </div>
 
           <button
