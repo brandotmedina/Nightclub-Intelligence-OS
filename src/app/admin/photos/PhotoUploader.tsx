@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type EventItem = { id: string; name: string; event_date: string };
 type AlbumItem = { id: string; title: string; event_id: string };
@@ -16,9 +17,11 @@ type FileEntry = {
 export default function PhotoUploader({
   events,
   albums,
+  clientId,
 }: {
   events: EventItem[];
   albums: AlbumItem[];
+  clientId: string;
 }) {
   // ── Auth ─────────────────────────────────────────────────────────────────
   const [phase, setPhase] = useState<"auth" | "upload">("auth");
@@ -116,6 +119,9 @@ export default function PhotoUploader({
   }
 
   // ── Upload ────────────────────────────────────────────────────────────────
+  // Files go directly to Supabase Storage via signed upload URLs.
+  // The API route only issues signed URLs + later confirms the DB insert —
+  // file bytes never pass through the Vercel function.
   async function handleUpload(e: React.FormEvent) {
     e.preventDefault();
     if (entries.length === 0) return;
@@ -151,29 +157,102 @@ export default function PhotoUploader({
         resolvedEventId = newEventId;
       }
 
-      // 2. Upload files sequentially
-      for (let i = 0; i < entries.length; i++) {
-        setStatus(i, "uploading");
-        try {
-          const thumb = await makeThumbnail(entries[i].file);
-          const fd = new FormData();
-          fd.append("passcode", passcodeRef.current);
-          fd.append("clientSlug", "midnight-club");
-          fd.append("albumId", albumId);
-          fd.append("sortOrder", String(i));
-          fd.append("thumbnail", thumb, "thumb.jpg");
-          fd.append("full", entries[i].file, entries[i].file.name);
-          fd.append("originalName", entries[i].file.name);
+      // 2. Process files in batches of 5 to avoid signed-URL expiry
+      const BATCH = 5;
+      for (let batchStart = 0; batchStart < entries.length; batchStart += BATCH) {
+        const batchEntries = entries.slice(batchStart, batchStart + BATCH);
+        const batchIndices = batchEntries.map((_, j) => batchStart + j);
 
-          const res = await fetch("/api/admin/photos/upload", {
-            method: "POST",
-            body: fd,
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error ?? "Upload failed");
-          setStatus(i, "done");
-        } catch (err) {
-          setStatus(i, "error", err instanceof Error ? err.message : "Unknown error");
+        // Build storage keys for this batch
+        const fileDescs = batchEntries.map((entry) => {
+          const uuid = crypto.randomUUID();
+          const ext = entry.file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+          return {
+            thumbKey: `${clientId}/${albumId}/${uuid}_thumb.jpg`,
+            fullKey: `${clientId}/${albumId}/${uuid}.${ext}`,
+            sortOrder: batchStart + batchEntries.indexOf(entry),
+          };
+        });
+
+        // Request signed URLs for this batch
+        const urlRes = await fetch("/api/admin/photos/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            passcode: passcodeRef.current,
+            albumId,
+            clientSlug: "midnight-club",
+            files: fileDescs.map(({ thumbKey, fullKey }) => ({ thumbKey, fullKey })),
+          }),
+        });
+        const urlData = await urlRes.json();
+        if (!urlRes.ok) throw new Error(urlData.error ?? "Failed to get signed URLs");
+
+        const signedUploads = urlData.uploads as {
+          thumbKey: string;
+          thumbSignedUrl: string;
+          thumbToken: string;
+          fullKey: string;
+          fullSignedUrl: string;
+          fullToken: string;
+        }[];
+
+        // Upload each file in the batch
+        for (let j = 0; j < batchEntries.length; j++) {
+          const entry = batchEntries[j];
+          const idx = batchIndices[j];
+          const signed = signedUploads[j];
+          const desc = fileDescs[j];
+
+          setStatus(idx, "uploading");
+          try {
+            // Generate thumbnail in browser
+            const thumb = await makeThumbnail(entry.file);
+
+            // Upload thumbnail directly to Supabase Storage
+            const { error: thumbErr } = await supabase.storage
+              .from("Photos")
+              .uploadToSignedUrl(signed.thumbKey, signed.thumbToken, thumb, {
+                contentType: "image/jpeg",
+              });
+            if (thumbErr) throw new Error(`Thumb upload: ${thumbErr.message}`);
+
+            // Upload full original directly to Supabase Storage
+            const { error: fullErr } = await supabase.storage
+              .from("Photos")
+              .uploadToSignedUrl(signed.fullKey, signed.fullToken, entry.file, {
+                contentType: entry.file.type || "image/jpeg",
+              });
+            if (fullErr) throw new Error(`Full upload: ${fullErr.message}`);
+
+            // Derive public URLs
+            const { data: thumbUrlData } = supabase.storage
+              .from("Photos")
+              .getPublicUrl(signed.thumbKey);
+            const { data: fullUrlData } = supabase.storage
+              .from("Photos")
+              .getPublicUrl(signed.fullKey);
+
+            // Confirm: insert DB row only after both files are safely in Storage
+            const confirmRes = await fetch("/api/admin/photos/confirm", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                passcode: passcodeRef.current,
+                albumId,
+                thumbnailUrl: thumbUrlData.publicUrl,
+                fullUrl: fullUrlData.publicUrl,
+                sortOrder: desc.sortOrder,
+                clientSlug: "midnight-club",
+              }),
+            });
+            const confirmData = await confirmRes.json();
+            if (!confirmRes.ok) throw new Error(confirmData.error ?? "Confirm failed");
+
+            setStatus(idx, "done");
+          } catch (err) {
+            setStatus(idx, "error", err instanceof Error ? err.message : "Unknown error");
+          }
         }
       }
 

@@ -2,85 +2,64 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getClientBySlug } from "@/lib/get-client";
 
+// Accepts JSON describing files the browser is about to upload directly.
+// Returns signed upload URLs + tokens for each blob — browser never sends
+// file bytes through this function, bypassing Vercel's 4.5 MB body cap.
 export async function POST(request: Request) {
-  const formData = await request.formData();
+  const { passcode, albumId, files, clientSlug } = await request.json();
 
-  const passcode = formData.get("passcode") as string | null;
   if (!passcode || passcode !== process.env.STAFF_PASSCODE) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const clientSlug = (formData.get("clientSlug") as string | null) ?? "midnight-club";
-  const albumId = formData.get("albumId") as string | null;
-  const sortOrder = parseInt((formData.get("sortOrder") as string | null) ?? "0", 10);
-  const thumbnailBlob = formData.get("thumbnail") as Blob | null;
-  const fullBlob = formData.get("full") as Blob | null;
-  const originalName = (formData.get("originalName") as string | null) ?? "photo.jpg";
+  if (!albumId || !Array.isArray(files) || files.length === 0) {
+    return NextResponse.json({ error: "albumId and files[] required" }, { status: 400 });
+  }
 
-  if (!albumId) return NextResponse.json({ error: "albumId required" }, { status: 400 });
-  if (!thumbnailBlob || !fullBlob)
-    return NextResponse.json({ error: "Both thumbnail and full blobs required" }, { status: 400 });
-
-  const client = await getClientBySlug(clientSlug);
+  const client = await getClientBySlug(clientSlug ?? "midnight-club");
   if (!client) return NextResponse.json({ error: "Client not found" }, { status: 404 });
 
-  const uuid = crypto.randomUUID();
-  const ext = originalName.split(".").pop()?.toLowerCase() ?? "jpg";
+  const uploads: {
+    thumbKey: string;
+    thumbSignedUrl: string;
+    thumbToken: string;
+    fullKey: string;
+    fullSignedUrl: string;
+    fullToken: string;
+  }[] = [];
 
-  const thumbPath = `${client.id}/${albumId}/${uuid}_thumb.jpg`;
-  const fullPath = `${client.id}/${albumId}/${uuid}.${ext}`;
+  for (const f of files as { thumbKey: string; fullKey: string }[]) {
+    const { data: thumbSigned, error: thumbErr } = await supabaseAdmin.storage
+      .from("Photos")
+      .createSignedUploadUrl(f.thumbKey);
 
-  const thumbBytes = await thumbnailBlob.arrayBuffer();
-  const fullBytes = await fullBlob.arrayBuffer();
+    if (thumbErr || !thumbSigned) {
+      return NextResponse.json(
+        { error: `Signed URL failed for thumb ${f.thumbKey}: ${thumbErr?.message}` },
+        { status: 500 }
+      );
+    }
 
-  const { error: thumbErr } = await supabaseAdmin.storage
-    .from("Photos")
-    .upload(thumbPath, thumbBytes, {
-      contentType: "image/jpeg",
-      upsert: false,
+    const { data: fullSigned, error: fullErr } = await supabaseAdmin.storage
+      .from("Photos")
+      .createSignedUploadUrl(f.fullKey);
+
+    if (fullErr || !fullSigned) {
+      return NextResponse.json(
+        { error: `Signed URL failed for full ${f.fullKey}: ${fullErr?.message}` },
+        { status: 500 }
+      );
+    }
+
+    uploads.push({
+      thumbKey: f.thumbKey,
+      thumbSignedUrl: thumbSigned.signedUrl,
+      thumbToken: thumbSigned.token,
+      fullKey: f.fullKey,
+      fullSignedUrl: fullSigned.signedUrl,
+      fullToken: fullSigned.token,
     });
-
-  if (thumbErr) {
-    return NextResponse.json({ error: `Thumbnail upload failed: ${thumbErr.message}` }, { status: 500 });
   }
 
-  const { error: fullErr } = await supabaseAdmin.storage
-    .from("Photos")
-    .upload(fullPath, fullBytes, {
-      contentType: fullBlob.type || "image/jpeg",
-      upsert: false,
-    });
-
-  if (fullErr) {
-    // Clean up the already-uploaded thumbnail before returning error
-    await supabaseAdmin.storage.from("Photos").remove([thumbPath]);
-    return NextResponse.json({ error: `Full image upload failed: ${fullErr.message}` }, { status: 500 });
-  }
-
-  const { data: thumbUrlData } = supabaseAdmin.storage.from("Photos").getPublicUrl(thumbPath);
-  const { data: fullUrlData } = supabaseAdmin.storage.from("Photos").getPublicUrl(fullPath);
-
-  const thumbnailUrl = thumbUrlData.publicUrl;
-  const fullUrl = fullUrlData.publicUrl;
-
-  const { data: photo, error: insertErr } = await supabaseAdmin
-    .from("photos")
-    .insert({
-      client_id: client.id,
-      album_id: albumId,
-      thumbnail_url: thumbnailUrl,
-      full_url: fullUrl,
-      sort_order: sortOrder,
-    })
-    .select("id")
-    .single();
-
-  if (insertErr || !photo) {
-    return NextResponse.json(
-      { error: `DB insert failed: ${insertErr?.message ?? "unknown"}` },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json({ ok: true, photoId: photo.id, thumbnailUrl, fullUrl });
+  return NextResponse.json({ ok: true, uploads });
 }

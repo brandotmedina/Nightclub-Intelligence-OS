@@ -32,5 +32,5 @@ export default async function AdminPhotosPage() {
   const events = (eventsResult.data ?? []) as { id: string; name: string; event_date: string }[];
   const albums = (albumsResult.data ?? []) as { id: string; title: string; event_id: string }[];
 
-  return <PhotoUploader events={events} albums={albums} />;
+  return <PhotoUploader events={events} albums={albums} clientId={clientId ?? ""} />;
 }
