@@ -1,16 +1,29 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getClientBySlug } from "@/lib/get-client";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const { eventId, quantity, customerName, customerPhone, customerEmail } =
+  const { eventId, quantity, customerName, customerPhone, customerEmail, clientSlug } =
     await request.json();
 
-  const clientId = process.env.CLIENT_ID!;
   const origin =
     request.headers.get("origin") ?? process.env.NEXT_PUBLIC_BASE_URL!;
+
+  // Resolve client: slug-based for new paths, env fallback for legacy calls
+  let clientId: string;
+  if (clientSlug) {
+    const client = await getClientBySlug(clientSlug);
+    if (!client) return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    clientId = client.id;
+  } else {
+    clientId = process.env.CLIENT_ID!;
+  }
+
+  // Base path for Stripe redirects
+  const eventsBase = clientSlug ? `/${clientSlug}/events` : "/events";
 
   const { data: event, error } = await supabaseAdmin
     .from("events")
@@ -74,7 +87,7 @@ export async function POST(request: Request) {
       );
 
     return NextResponse.json({
-      url: `${origin}/events/${eventId}/success?order_id=${order.id}`,
+      url: `${origin}${eventsBase}/${eventId}/success?order_id=${order.id}`,
     });
   }
 
@@ -125,8 +138,8 @@ export async function POST(request: Request) {
       tax_cents: String(taxCents),
       fee_cents: String(feeCents),
     },
-    success_url: `${origin}/events/${eventId}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/events/${eventId}`,
+    success_url: `${origin}${eventsBase}/${eventId}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}${eventsBase}/${eventId}`,
   });
 
   return NextResponse.json({ url: session.url });

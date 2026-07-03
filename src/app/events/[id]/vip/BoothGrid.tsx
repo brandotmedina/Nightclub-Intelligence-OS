@@ -68,11 +68,15 @@ export default function BoothGrid({
   booths,
   takenBoothIds: takenBoothIdList,
   eventId,
+  clientSlug,
+  inquiryPhone,
 }: {
   areas: Area[];
   booths: Booth[];
   takenBoothIds: string[];
   eventId: string;
+  clientSlug?: string;
+  inquiryPhone?: string;
 }) {
   const [phase, setPhase] = useState<Phase>({ kind: "browse" });
   const [localTaken, setLocalTaken] = useState<Set<string>>(
@@ -126,7 +130,7 @@ export default function BoothGrid({
       const res = await fetch("/api/vip/reserve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, boothId, name, phone, email, bottleAck }),
+        body: JSON.stringify({ eventId, boothId, name, phone, email, bottleAck, ...(clientSlug ? { clientSlug } : {}) }),
       });
 
       const data = await res.json();
@@ -169,7 +173,7 @@ export default function BoothGrid({
       const res = await fetch("/api/vip/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reservationId }),
+        body: JSON.stringify({ reservationId, ...(clientSlug ? { clientSlug } : {}) }),
       });
 
       const data = await res.json();
@@ -285,7 +289,7 @@ export default function BoothGrid({
         takenBoothIds={localTaken}
         onBoothSelect={handleSelectBooth}
         isIdle={phase.kind === "browse"}
-        inquiryPhone={process.env.NEXT_PUBLIC_VIP_INQUIRY_PHONE}
+        inquiryPhone={inquiryPhone}
       />
 
       {/* Sticky bottom — identity form + reserve */}
