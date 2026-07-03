@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type EventItem = { id: string; name: string; event_date: string };
-type AlbumItem = { id: string; title: string; event_id: string };
+type AlbumItem = { id: string; title: string; event_id: string; is_published: boolean };
 type FileStatus = "queued" | "uploading" | "done" | "error";
 
 type FileEntry = {
@@ -45,6 +45,10 @@ export default function PhotoUploader({
   const [doneEventId, setDoneEventId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
+
+  // ── Album list state (for publish toggles) ────────────────────────────────
+  const [albumList, setAlbumList] = useState<AlbumItem[]>(albums);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   // ── Auth handler ──────────────────────────────────────────────────────────
   async function handleAuth(e: React.FormEvent) {
@@ -262,6 +266,32 @@ export default function PhotoUploader({
       alert(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
+    }
+  }
+
+  // ── Publish toggle ────────────────────────────────────────────────────────
+  async function togglePublish(albumId: string, current: boolean) {
+    setTogglingId(albumId);
+    try {
+      const res = await fetch("/api/admin/photos/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          passcode: passcodeRef.current,
+          albumId,
+          isPublished: !current,
+          clientSlug: "midnight-club",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Toggle failed");
+      setAlbumList((prev) =>
+        prev.map((a) => (a.id === albumId ? { ...a, is_published: data.isPublished } : a))
+      );
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Toggle failed");
+    } finally {
+      setTogglingId(null);
     }
   }
 
@@ -509,6 +539,47 @@ export default function PhotoUploader({
                 : `Upload ${entries.length > 0 ? entries.length : ""} Photo${entries.length !== 1 ? "s" : ""}`}
             </button>
           </form>
+        )}
+
+        {/* ── Album list ──────────────────────────────────────────────── */}
+        {albumList.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-text-muted text-sm font-semibold uppercase tracking-wider mb-3">
+              Albums
+            </h2>
+            <div className="space-y-2">
+              {albumList.map((a) => (
+                <div
+                  key={a.id}
+                  className="flex items-center gap-3 bg-surface border border-border rounded-xl px-4 py-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <a
+                      href={`/admin/photos/${a.id}`}
+                      className="text-text text-sm font-medium hover:text-plum transition-colors truncate block"
+                    >
+                      {a.title}
+                    </a>
+                    <span
+                      className={`text-xs font-semibold ${
+                        a.is_published ? "text-success" : "text-text-muted"
+                      }`}
+                    >
+                      {a.is_published ? "Published" : "Hidden"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => togglePublish(a.id, a.is_published)}
+                    disabled={togglingId === a.id}
+                    className="shrink-0 bg-surface-2 border border-border hover:border-plum/40 disabled:opacity-50 text-text-muted text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    {togglingId === a.id ? "…" : a.is_published ? "Unpublish" : "Publish"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </main>
