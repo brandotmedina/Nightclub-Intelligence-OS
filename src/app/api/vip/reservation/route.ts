@@ -1,15 +1,25 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getClientBySlug } from "@/lib/get-client";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("session_id");
-  const clientId = process.env.CLIENT_ID!;
+  const clientSlugParam = searchParams.get("client_slug");
 
   if (!sessionId) {
     return NextResponse.json({ error: "Missing session_id" }, { status: 400 });
+  }
+
+  let clientId: string;
+  if (clientSlugParam) {
+    const client = await getClientBySlug(clientSlugParam);
+    if (!client) return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    clientId = client.id;
+  } else {
+    clientId = process.env.CLIENT_ID!;
   }
 
   // Resolve reservation via the payment record keyed on stripe_session_id
@@ -33,7 +43,6 @@ export async function GET(request: Request) {
 
   if (!reservation) return NextResponse.json({ ready: false });
 
-  // Not yet confirmed (webhook may not have fired)
   if (reservation.status !== "confirmed") {
     return NextResponse.json({ ready: false });
   }

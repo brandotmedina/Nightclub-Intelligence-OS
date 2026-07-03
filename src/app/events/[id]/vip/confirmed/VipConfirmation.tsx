@@ -11,7 +11,7 @@ type ConfirmationResponse = {
   booth?: { label: string };
 };
 
-export default function VipConfirmation({ sessionId }: { sessionId?: string }) {
+export default function VipConfirmation({ sessionId, clientSlug }: { sessionId?: string; clientSlug?: string }) {
   const [data, setData] = useState<ConfirmationResponse | null>(null);
   const [timedOut, setTimedOut] = useState(false);
 
@@ -24,7 +24,8 @@ export default function VipConfirmation({ sessionId }: { sessionId?: string }) {
     async function poll() {
       if (cancelled) return;
       try {
-        const res = await fetch(`/api/vip/reservation?session_id=${sessionId}`);
+        const slugParam = clientSlug ? `&client_slug=${clientSlug}` : "";
+        const res = await fetch(`/api/vip/reservation?session_id=${sessionId}${slugParam}`);
         const json: ConfirmationResponse = await res.json();
         if (cancelled) return;
         setData(json);
@@ -157,7 +158,7 @@ export default function VipConfirmation({ sessionId }: { sessionId?: string }) {
 
         <div className="mt-10 text-center">
           <Link
-            href="/events"
+            href={clientSlug ? `/${clientSlug}/events` : "/events"}
             className="text-text-dim text-sm hover:text-text-muted transition-colors"
           >
             ← Back to Events

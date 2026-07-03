@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getClientBySlug } from "@/lib/get-client";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +8,7 @@ const HOLD_MINUTES = 10;
 const BOOTH_FEE = 50;
 
 export async function POST(request: Request) {
-  const { eventId, boothId, name, phone, email, bottleAck } =
+  const { eventId, boothId, name, phone, email, bottleAck, clientSlug } =
     await request.json();
 
   // a. Require bottle minimum acknowledgement
@@ -18,7 +19,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const clientId = process.env.CLIENT_ID!;
+  let clientId: string;
+  if (clientSlug) {
+    const client = await getClientBySlug(clientSlug);
+    if (!client) return NextResponse.json({ error: "client_not_found" }, { status: 404 });
+    clientId = client.id;
+  } else {
+    clientId = process.env.CLIENT_ID!;
+  }
 
   // Gate: reject if VIP is not enabled for this event
   const { data: eventCheck } = await supabaseAdmin
@@ -44,7 +52,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "booth_not_bookable" }, { status: 403 });
   }
 
-  // b. Find-or-create customer by phone (same pattern as ticket checkout flow)
+  // b. Find-or-create customer by phone
   const { data: existingCustomer } = await supabaseAdmin
     .from("customers")
     .select("id")
@@ -72,7 +80,7 @@ export async function POST(request: Request) {
     customerId = newCustomer.id as string;
   }
 
-  // c. Expire any stale held rows for this booth+event (frees the partial unique index)
+  // c. Expire any stale held rows for this booth+event
   await supabaseAdmin
     .from("reservations")
     .update({ status: "expired" })
@@ -104,7 +112,6 @@ export async function POST(request: Request) {
     .single();
 
   if (insertErr) {
-    // e. Unique violation (23505) on one_active_booth_per_event → booth just taken
     if (
       (insertErr as unknown as { code?: string }).code === "23505"
     ) {
@@ -114,7 +121,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "reserve_error" }, { status: 500 });
   }
 
-  // f. Success
   return NextResponse.json({
     reservationId: reservation.id,
     holdExpiresAt,

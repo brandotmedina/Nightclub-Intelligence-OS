@@ -22,17 +22,20 @@ type OrderResponse = {
 export default function TicketConfirmation({
   sessionId,
   orderId,
+  clientSlug,
 }: {
   sessionId?: string;
   orderId?: string;
+  clientSlug?: string;
 }) {
   const [data, setData] = useState<OrderResponse | null>(null);
   const [timedOut, setTimedOut] = useState(false);
 
+  const slugParam = clientSlug ? `&client_slug=${clientSlug}` : "";
   const pollUrl = sessionId
-    ? `/api/orders?session_id=${sessionId}`
+    ? `/api/orders?session_id=${sessionId}${slugParam}`
     : orderId
-    ? `/api/orders?order_id=${orderId}`
+    ? `/api/orders?order_id=${orderId}${slugParam}`
     : null;
 
   useEffect(() => {
@@ -168,7 +171,7 @@ export default function TicketConfirmation({
 
         <div className="mt-10 text-center">
           <Link
-            href="/events"
+            href={clientSlug ? `/${clientSlug}/events` : "/events"}
             className="text-text-dim text-sm hover:text-text-muted transition-colors"
           >
             ← Back to Events

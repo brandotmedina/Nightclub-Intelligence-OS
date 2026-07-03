@@ -8,10 +8,12 @@ export default function EventCTAs({
   eventId,
   price,
   isFree,
+  clientSlug,
 }: {
   eventId: string;
   price: number;
   isFree: boolean;
+  clientSlug?: string;
 }) {
   const [ticketsOpen, setTicketsOpen] = useState(false);
 
@@ -35,7 +37,7 @@ export default function EventCTAs({
 
         {/* VIP Reservation — gold accent */}
         <Link
-          href={`/events/${eventId}/vip`}
+          href={clientSlug ? `/${clientSlug}/events/${eventId}/vip` : `/events/${eventId}/vip`}
           className="flex-1 flex flex-col items-center justify-center gap-1 bg-surface border border-gold/40 hover:border-gold/60 rounded-2xl py-4 px-3 transition-colors text-center"
         >
           <span className="text-sm font-medium text-gold leading-tight">
@@ -57,7 +59,7 @@ export default function EventCTAs({
       >
         <div className="overflow-hidden">
           <div className="bg-surface border border-border rounded-2xl p-6 pt-5">
-            <TicketPurchaseForm eventId={eventId} price={price} />
+            <TicketPurchaseForm eventId={eventId} price={price} clientSlug={clientSlug} />
           </div>
         </div>
       </div>

@@ -10,12 +10,13 @@ type Event = {
   flyer_url: string | null;
 };
 
-export default function EventCard({ event }: { event: Event }) {
+export default function EventCard({ event, clientSlug }: { event: Event; clientSlug?: string }) {
   const isFree = event.price === 0;
+  const href = clientSlug ? `/${clientSlug}/events/${event.id}` : `/events/${event.id}`;
 
   return (
     <Link
-      href={`/events/${event.id}`}
+      href={href}
       className="flex items-center gap-4 bg-surface hover:bg-surface-2 border border-border hover:border-plum/40 rounded-2xl p-4 transition-colors group"
     >
       {/* Flyer thumbnail */}

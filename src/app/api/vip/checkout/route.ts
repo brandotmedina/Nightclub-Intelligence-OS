@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getClientBySlug } from "@/lib/get-client";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +12,20 @@ const TOTAL_CENTS = 5181;
 const FEE_CENTS = 181; // TOTAL_CENTS - BASE_CENTS
 
 export async function POST(request: Request) {
-  const { reservationId } = await request.json();
-  const clientId = process.env.CLIENT_ID!;
+  const { reservationId, clientSlug } = await request.json();
   const origin =
     request.headers.get("origin") ?? process.env.NEXT_PUBLIC_BASE_URL!;
+
+  let clientId: string;
+  if (clientSlug) {
+    const client = await getClientBySlug(clientSlug);
+    if (!client) return NextResponse.json({ error: "client_not_found" }, { status: 404 });
+    clientId = client.id;
+  } else {
+    clientId = process.env.CLIENT_ID!;
+  }
+
+  const eventsBase = clientSlug ? `/${clientSlug}/events` : "/events";
 
   // Load reservation — must be held and not expired
   const { data: reservation, error: resErr } = await supabaseAdmin
@@ -61,7 +72,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "vip_not_enabled" }, { status: 403 });
   }
 
-  // Gate: reject if booth is not online-bookable
   if (!booth || booth.booking_mode !== "online") {
     return NextResponse.json({ error: "booth_not_bookable" }, { status: 403 });
   }
@@ -96,8 +106,8 @@ export async function POST(request: Request) {
       vip_reservation_id: reservationId,
       client_id: clientId,
     },
-    success_url: `${origin}/events/${reservation.event_id}/vip/confirmed?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${origin}/events/${reservation.event_id}/vip`,
+    success_url: `${origin}${eventsBase}/${reservation.event_id}/vip/confirmed?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${origin}${eventsBase}/${reservation.event_id}/vip`,
   });
 
   return NextResponse.json({ url: session.url });

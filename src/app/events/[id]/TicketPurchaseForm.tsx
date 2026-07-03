@@ -5,9 +5,11 @@ import { useState } from "react";
 export default function TicketPurchaseForm({
   eventId,
   price,
+  clientSlug,
 }: {
   eventId: string;
   price: number;
+  clientSlug?: string;
 }) {
   const [quantity, setQuantity] = useState(1);
   const [name, setName] = useState("");
@@ -52,6 +54,7 @@ export default function TicketPurchaseForm({
           customerName: name,
           customerPhone: phone,
           customerEmail: email,
+          ...(clientSlug ? { clientSlug } : {}),
           attribution,
         }),
       });
