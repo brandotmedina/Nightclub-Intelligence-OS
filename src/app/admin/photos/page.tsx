@@ -23,14 +23,14 @@ export default async function AdminPhotosPage() {
     clientId
       ? supabaseAdmin
           .from("photo_albums")
-          .select("id, title, event_id")
+          .select("id, title, event_id, is_published")
           .eq("client_id", clientId)
           .order("shoot_date", { ascending: false })
       : Promise.resolve({ data: [] }),
   ]);
 
   const events = (eventsResult.data ?? []) as { id: string; name: string; event_date: string }[];
-  const albums = (albumsResult.data ?? []) as { id: string; title: string; event_id: string }[];
+  const albums = (albumsResult.data ?? []) as { id: string; title: string; event_id: string; is_published: boolean }[];
 
   return <PhotoUploader events={events} albums={albums} />;
 }
