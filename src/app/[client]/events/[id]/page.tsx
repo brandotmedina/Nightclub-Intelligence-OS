@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getClientBySlug } from "@/lib/get-client";
 import { formatEventDate } from "@/lib/formatEvent";
@@ -30,17 +29,6 @@ export default async function EventDetailPage({
   if (error || !event) notFound();
 
   const isFree = event.price === 0;
-
-  // Check for a published photo album (public client — public read policy)
-  const { data: albumCheck } = await supabase
-    .from("photo_albums")
-    .select("id")
-    .eq("client_id", client.id)
-    .eq("event_id", id)
-    .eq("is_published", true)
-    .limit(1)
-    .maybeSingle();
-  const hasPhotos = !!albumCheck;
 
   return (
     <>
@@ -104,16 +92,6 @@ export default async function EventDetailPage({
               </div>
             )}
           </div>
-
-          {hasPhotos && (
-            <Link
-              href={`/${slug}/events/${id}/photos`}
-              className="flex items-center justify-between bg-surface border border-border rounded-xl px-4 py-3 mb-8 hover:border-plum/40 transition-colors"
-            >
-              <span className="text-text-muted text-sm">Photos from this night</span>
-              <span className="text-text-dim text-sm">→</span>
-            </Link>
-          )}
 
           {event.vip_enabled ? (
             <EventCTAs
