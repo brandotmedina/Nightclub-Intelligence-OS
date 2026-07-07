@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getClientBySlug } from "@/lib/get-client";
+import { isPastEvent } from "@/lib/event-date";
 
 export const dynamic = "force-dynamic";
 
@@ -27,13 +28,17 @@ export async function POST(request: Request) {
 
   const { data: event, error } = await supabaseAdmin
     .from("events")
-    .select("id, name, price")
+    .select("id, name, price, event_date")
     .eq("id", eventId)
     .eq("client_id", clientId)
     .single();
 
   if (error || !event) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });
+  }
+
+  if (isPastEvent(event.event_date)) {
+    return NextResponse.json({ error: "event_ended" }, { status: 403 });
   }
 
   // ── Free event: skip Stripe, create records directly ─────────────────

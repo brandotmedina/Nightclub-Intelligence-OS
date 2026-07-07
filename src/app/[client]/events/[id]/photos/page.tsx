@@ -45,10 +45,10 @@ export default async function PhotoAlbumPage({
     <main className="min-h-screen bg-bg text-text">
       <div className="max-w-2xl mx-auto px-4 pt-6 pb-16">
         <Link
-          href={`/${slug}/events/${eventId}`}
+          href={`/${slug}/albums`}
           className="inline-flex items-center gap-1 text-text-dim hover:text-text-muted text-sm mb-6 transition-colors"
         >
-          ← Back to Event
+          ← Back to Albums
         </Link>
 
         {album ? (
