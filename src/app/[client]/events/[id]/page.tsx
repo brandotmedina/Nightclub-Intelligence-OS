@@ -1,9 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getClientBySlug } from "@/lib/get-client";
 import { formatEventDate } from "@/lib/formatEvent";
+import { isPastEvent } from "@/lib/event-date";
 import TicketPurchaseForm from "@/app/events/[id]/TicketPurchaseForm";
 import EventCTAs from "@/app/events/[id]/EventCTAs";
 import AttributionCapture from "@/app/events/[id]/AttributionCapture";
@@ -27,6 +28,8 @@ export default async function EventDetailPage({
     .single();
 
   if (error || !event) notFound();
+
+  if (isPastEvent(event.event_date)) redirect(`/${slug}/events`);
 
   const isFree = event.price === 0;
 

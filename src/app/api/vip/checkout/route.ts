@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getClientBySlug } from "@/lib/get-client";
+import { isPastEvent } from "@/lib/event-date";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
   const [{ data: event }, { data: booth }] = await Promise.all([
     supabaseAdmin
       .from("events")
-      .select("name, vip_enabled")
+      .select("name, vip_enabled, event_date")
       .eq("id", reservation.event_id)
       .eq("client_id", clientId)
       .single(),
@@ -70,6 +71,10 @@ export async function POST(request: Request) {
 
   if (!event?.vip_enabled) {
     return NextResponse.json({ error: "vip_not_enabled" }, { status: 403 });
+  }
+
+  if (isPastEvent(event.event_date)) {
+    return NextResponse.json({ error: "event_ended" }, { status: 403 });
   }
 
   if (!booth || booth.booking_mode !== "online") {

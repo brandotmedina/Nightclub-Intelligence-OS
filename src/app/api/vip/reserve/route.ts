@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getClientBySlug } from "@/lib/get-client";
+import { isPastEvent } from "@/lib/event-date";
 
 export const dynamic = "force-dynamic";
 
@@ -31,13 +32,17 @@ export async function POST(request: Request) {
   // Gate: reject if VIP is not enabled for this event
   const { data: eventCheck } = await supabaseAdmin
     .from("events")
-    .select("vip_enabled")
+    .select("vip_enabled, event_date")
     .eq("id", eventId)
     .eq("client_id", clientId)
     .single();
 
   if (!eventCheck?.vip_enabled) {
     return NextResponse.json({ error: "vip_not_enabled" }, { status: 403 });
+  }
+
+  if (isPastEvent(eventCheck.event_date)) {
+    return NextResponse.json({ error: "event_ended" }, { status: 403 });
   }
 
   // Gate: reject if booth is not online-bookable
