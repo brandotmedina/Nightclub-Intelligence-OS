@@ -18,7 +18,7 @@ export default async function AdminAlbumPage({
 
   const { data: album } = await supabaseAdmin
     .from("photo_albums")
-    .select("id, title, shoot_date, is_published, event_id")
+    .select("id, title, shoot_date, is_published, event_id, cover_photo_id")
     .eq("id", albumId)
     .eq("client_id", client.id)
     .single();
@@ -33,8 +33,9 @@ export default async function AdminAlbumPage({
 
   return (
     <AlbumPreview
-      album={album as { id: string; title: string; shoot_date: string | null; is_published: boolean; event_id: string }}
+      album={album as { id: string; title: string; shoot_date: string | null; is_published: boolean; event_id: string; cover_photo_id: string | null }}
       photos={(photos ?? []) as { id: string; thumbnail_url: string; full_url: string }[]}
+      coverPhotoId={(album as { cover_photo_id: string | null }).cover_photo_id ?? null}
     />
   );
 }
