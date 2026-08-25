@@ -20,14 +20,30 @@ export default async function AlbumsPage({
 
   const { data: albums } = await supabase
     .from("photo_albums")
-    .select("id, title, shoot_date, event_id")
+    .select("id, title, shoot_date, event_id, cover_photo_id")
     .eq("client_id", client.id)
     .eq("is_published", true)
     .order("shoot_date", { ascending: false });
 
-  // For each album fetch the first photo thumbnail (cover)
+  // For each album resolve the cover thumbnail:
+  // - if cover_photo_id is set, fetch that specific photo's thumbnail
+  // - otherwise fall back to first photo by sort_order
   const covers = await Promise.all(
     (albums ?? []).map(async (album) => {
+      const coverPhotoId = (album as { cover_photo_id: string | null }).cover_photo_id ?? null;
+
+      if (coverPhotoId) {
+        const { data } = await supabase
+          .from("photos")
+          .select("thumbnail_url")
+          .eq("id", coverPhotoId)
+          .maybeSingle();
+        if (data?.thumbnail_url) {
+          return { albumId: album.id, thumbnail_url: data.thumbnail_url };
+        }
+      }
+
+      // Fallback: first photo by sort_order
       const { data } = await supabase
         .from("photos")
         .select("thumbnail_url")

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { formatEventDate } from "@/lib/formatEvent";
 
@@ -11,15 +12,20 @@ type Album = {
   shoot_date: string | null;
   is_published: boolean;
   event_id: string;
+  cover_photo_id: string | null;
 };
 
 export default function AlbumPreview({
   album,
-  photos,
+  photos: initialPhotos,
+  coverPhotoId: initialCoverPhotoId,
 }: {
   album: Album;
   photos: Photo[];
+  coverPhotoId: string | null;
 }) {
+  const router = useRouter();
+
   const [phase, setPhase] = useState<"auth" | "view">("auth");
   const [passcode, setPasscode] = useState("");
   const [authError, setAuthError] = useState(false);
@@ -29,6 +35,11 @@ export default function AlbumPreview({
   const [isPublished, setIsPublished] = useState(album.is_published);
   const [toggling, setToggling] = useState(false);
   const [active, setActive] = useState<Photo | null>(null);
+
+  const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
+  const [coverPhotoId, setCoverPhotoId] = useState<string | null>(initialCoverPhotoId);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [settingCoverId, setSettingCoverId] = useState<string | null>(null);
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault();
@@ -68,6 +79,56 @@ export default function AlbumPreview({
       alert(err instanceof Error ? err.message : "Toggle failed");
     } finally {
       setToggling(false);
+    }
+  }
+
+  async function handleDelete(photo: Photo) {
+    if (!window.confirm("Delete this photo? This cannot be undone.")) return;
+    setDeletingId(photo.id);
+    try {
+      const res = await fetch("/api/admin/photos/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          passcode: passcodeStored,
+          photoId: photo.id,
+          clientSlug: "midnight-club",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Delete failed");
+      // Remove from local state immediately
+      setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+      if (active?.id === photo.id) setActive(null);
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleSetCover(photo: Photo) {
+    setSettingCoverId(photo.id);
+    try {
+      const res = await fetch("/api/admin/photos/set-cover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          passcode: passcodeStored,
+          albumId: album.id,
+          photoId: photo.id,
+          clientSlug: "midnight-club",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Set cover failed");
+      setCoverPhotoId(photo.id);
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Set cover failed");
+    } finally {
+      setSettingCoverId(null);
     }
   }
 
@@ -153,22 +214,62 @@ export default function AlbumPreview({
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-1 sm:gap-2">
-            {photos.map((photo) => (
-              <button
-                key={photo.id}
-                type="button"
-                onClick={() => setActive(photo)}
-                className="aspect-square overflow-hidden rounded-lg bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-plum"
-              >
-                <Image
-                  src={photo.thumbnail_url}
-                  alt=""
-                  width={400}
-                  height={400}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
+            {photos.map((photo) => {
+              const isCover = photo.id === coverPhotoId;
+              const isDeleting = deletingId === photo.id;
+              const isSettingCover = settingCoverId === photo.id;
+
+              return (
+                <div key={photo.id} className="relative aspect-square overflow-hidden rounded-lg bg-surface">
+                  {/* Lightbox trigger — covers the full tile */}
+                  <button
+                    type="button"
+                    onClick={() => setActive(photo)}
+                    className="absolute inset-0 w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-plum"
+                    aria-label="View photo"
+                  >
+                    <Image
+                      src={photo.thumbnail_url}
+                      alt=""
+                      width={400}
+                      height={400}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+
+                  {/* Cover indicator / Set cover button — top-left */}
+                  <div className="absolute top-1 left-1 z-10">
+                    {isCover ? (
+                      <span className="inline-flex items-center gap-0.5 bg-gold/90 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none">
+                        ★ Cover
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSetCover(photo); }}
+                        disabled={isSettingCover}
+                        className="inline-flex items-center bg-black/60 hover:bg-black/80 disabled:opacity-50 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md leading-none transition-colors"
+                      >
+                        {isSettingCover ? "…" : "Set cover"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Delete button — top-right */}
+                  <div className="absolute top-1 right-1 z-10">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleDelete(photo); }}
+                      disabled={isDeleting}
+                      className="flex items-center justify-center w-6 h-6 bg-black/60 hover:bg-red-600/80 disabled:opacity-50 text-white rounded-md text-xs leading-none transition-colors"
+                      aria-label="Delete photo"
+                    >
+                      {isDeleting ? "…" : "✕"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
