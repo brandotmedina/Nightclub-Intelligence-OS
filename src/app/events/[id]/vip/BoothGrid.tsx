@@ -70,6 +70,7 @@ export default function BoothGrid({
   eventId,
   clientSlug,
   inquiryPhone,
+  bottleMinimum = 1,
 }: {
   areas: Area[];
   booths: Booth[];
@@ -77,6 +78,7 @@ export default function BoothGrid({
   eventId: string;
   clientSlug?: string;
   inquiryPhone?: string;
+  bottleMinimum?: number;
 }) {
   const [phase, setPhase] = useState<Phase>({ kind: "browse" });
   const [localTaken, setLocalTaken] = useState<Set<string>>(
@@ -222,7 +224,7 @@ export default function BoothGrid({
             <p className="text-text-dim text-xs uppercase tracking-wider mb-2">Summary</p>
             <p className="text-text-muted text-sm">{selectedBooth?.label} · ${BOOTH_FEE} reservation fee</p>
             <p className="text-text-muted text-sm">Includes {ENTRIES_INCLUDED} entries</p>
-            <p className="text-text-muted text-sm">1-bottle minimum required</p>
+            <p className="text-text-muted text-sm">{bottleMinimum}-bottle minimum required</p>
           </div>
         </div>
 
@@ -356,7 +358,7 @@ export default function BoothGrid({
                     className="mt-0.5 w-4 h-4 rounded accent-plum shrink-0"
                   />
                   <span className="text-text-muted text-xs leading-relaxed">
-                    I acknowledge a 1-bottle minimum purchase is required for VIP booths
+                    I acknowledge a {bottleMinimum}-bottle minimum purchase is required for VIP booths
                   </span>
                 </label>
 

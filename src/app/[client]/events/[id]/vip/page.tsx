@@ -25,7 +25,7 @@ export default async function VipPage({
 
   const { data: event, error: eventErr } = await supabaseAdmin
     .from("events")
-    .select("id, name, event_date, vip_enabled")
+    .select("id, name, event_date, vip_enabled, bottle_minimum")
     .eq("client_id", clientId)
     .eq("id", eventId)
     .single();
@@ -100,6 +100,7 @@ export default async function VipPage({
           eventId={eventId}
           clientSlug={slug}
           inquiryPhone={inquiryPhone}
+          bottleMinimum={(event as { bottle_minimum: number }).bottle_minimum ?? 1}
         />
       </div>
     </main>

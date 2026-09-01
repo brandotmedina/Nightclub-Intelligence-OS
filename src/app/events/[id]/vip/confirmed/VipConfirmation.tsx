@@ -7,8 +7,9 @@ import { formatEventDate } from "@/lib/formatEvent";
 type ConfirmationResponse = {
   ready: boolean;
   reservation?: { id: string; status: string; fee: number; entries_included: number };
-  event?: { name: string; event_date: string };
+  event?: { name: string; event_date: string; bottle_minimum: number };
   booth?: { label: string };
+  customer?: { full_name: string; phone: string; email: string } | null;
 };
 
 export default function VipConfirmation({ sessionId, clientSlug }: { sessionId?: string; clientSlug?: string }) {
@@ -86,7 +87,7 @@ export default function VipConfirmation({ sessionId, clientSlug }: { sessionId?:
     );
   }
 
-  const { reservation, event, booth } = data;
+  const { reservation, event, booth, customer } = data;
 
   return (
     <main className="min-h-screen bg-bg text-text">
@@ -136,7 +137,11 @@ export default function VipConfirmation({ sessionId, clientSlug }: { sessionId?:
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-text-dim">Bottle minimum</span>
-              <span className="text-text-muted">1 bottle required</span>
+              <span className="text-text-muted">
+                {(event?.bottle_minimum ?? 1) === 1
+                  ? "1 bottle required"
+                  : `${event?.bottle_minimum} bottles required`}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-text-dim">Reservation fee</span>
@@ -145,6 +150,24 @@ export default function VipConfirmation({ sessionId, clientSlug }: { sessionId?:
               </span>
             </div>
           </div>
+
+          {customer && (
+            <div className="border-t border-border pt-4 space-y-2">
+              <p className="text-text-dim text-xs uppercase tracking-wider">Guest details</p>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-dim">Name</span>
+                <span className="text-text-muted">{customer.full_name}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-dim">Phone</span>
+                <span className="text-text-muted">{customer.phone}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-dim">Email</span>
+                <span className="text-text-muted">{customer.email}</span>
+              </div>
+            </div>
+          )}
 
           <div className="bg-surface-2 border border-border rounded-xl px-4 py-3 text-center">
             <p className="text-text-muted text-sm font-medium">
