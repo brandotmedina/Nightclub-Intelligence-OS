@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       fee: BOOTH_FEE,
       entries_included: 8,
       bottle_min_ack: true,
-      booth_under_name: boothUnderName ?? null,
+      booth_under_name: boothUnderName || null,
       status: "held",
       hold_expires_at: holdExpiresAt,
     })

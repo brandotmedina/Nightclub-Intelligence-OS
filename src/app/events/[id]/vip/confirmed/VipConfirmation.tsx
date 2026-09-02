@@ -6,7 +6,7 @@ import { formatEventDate } from "@/lib/formatEvent";
 
 type ConfirmationResponse = {
   ready: boolean;
-  reservation?: { id: string; status: string; fee: number; entries_included: number };
+  reservation?: { id: string; status: string; fee: number; entries_included: number; booth_under_name?: string | null };
   event?: { name: string; event_date: string; bottle_minimum: number };
   booth?: { label: string };
   customer?: { full_name: string; phone: string; email: string } | null;
@@ -154,6 +154,12 @@ export default function VipConfirmation({ sessionId, clientSlug }: { sessionId?:
           {customer && (
             <div className="border-t border-border pt-4 space-y-2">
               <p className="text-text-dim text-xs uppercase tracking-wider">Guest details</p>
+              {reservation?.booth_under_name && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-text-dim">Booth under</span>
+                  <span className="text-text-muted">{reservation.booth_under_name}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-text-dim">Name</span>
                 <span className="text-text-muted">{customer.full_name}</span>

@@ -135,7 +135,7 @@ export default function BoothGrid({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ eventId, boothId, name, phone, email, bottleAck,
-          boothUnderName: boothUnderSelf === false ? otherName.trim() : name.trim(),
+          boothUnderName: boothUnderSelf === false ? otherName.trim() : null,
           ...(clientSlug ? { clientSlug } : {}) }),
       });
 
