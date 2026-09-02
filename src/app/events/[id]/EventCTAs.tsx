@@ -9,11 +9,13 @@ export default function EventCTAs({
   price,
   isFree,
   clientSlug,
+  bottleMinimum = 1,
 }: {
   eventId: string;
   price: number;
   isFree: boolean;
   clientSlug?: string;
+  bottleMinimum?: number;
 }) {
   const [ticketsOpen, setTicketsOpen] = useState(false);
 
@@ -44,7 +46,7 @@ export default function EventCTAs({
             VIP Reservation · $50
           </span>
           <span className="text-[12px] font-normal leading-tight text-gold/65">
-            Includes 8 entries • 1-bottle minimum
+            Includes 8 entries • {bottleMinimum}-bottle minimum
           </span>
         </Link>
       </div>

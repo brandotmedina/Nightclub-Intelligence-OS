@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
   const { data: reservation } = await supabaseAdmin
     .from("reservations")
-    .select("id, status, event_id, booth_id, fee, entries_included")
+    .select("id, status, event_id, booth_id, fee, entries_included, customer_id")
     .eq("id", payment.reservation_id)
     .eq("client_id", clientId)
     .single();
@@ -47,16 +47,22 @@ export async function GET(request: Request) {
     return NextResponse.json({ ready: false });
   }
 
-  const [{ data: event }, { data: booth }] = await Promise.all([
+  const [{ data: event }, { data: booth }, { data: customer }] = await Promise.all([
     supabaseAdmin
       .from("events")
-      .select("name, event_date")
+      .select("name, event_date, bottle_minimum")
       .eq("id", reservation.event_id)
       .single(),
     supabaseAdmin
       .from("booths")
       .select("label")
       .eq("id", reservation.booth_id)
+      .single(),
+    supabaseAdmin
+      .from("customers")
+      .select("full_name, phone, email")
+      .eq("id", reservation.customer_id)
+      .eq("client_id", clientId)
       .single(),
   ]);
 
@@ -70,5 +76,6 @@ export async function GET(request: Request) {
     },
     event: event ?? null,
     booth: booth ?? null,
+    customer: customer ?? null,
   });
 }

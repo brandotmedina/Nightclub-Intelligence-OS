@@ -22,7 +22,7 @@ export default async function EventDetailPage({
 
   const { data: event, error } = await supabaseAdmin
     .from("events")
-    .select("id, name, event_date, price, flyer_url, dj_lineup, genre, vip_enabled")
+    .select("id, name, event_date, price, flyer_url, dj_lineup, genre, vip_enabled, bottle_minimum")
     .eq("client_id", client.id)
     .eq("id", id)
     .single();
@@ -102,6 +102,7 @@ export default async function EventDetailPage({
               price={event.price}
               isFree={isFree}
               clientSlug={slug}
+              bottleMinimum={(event as { bottle_minimum: number }).bottle_minimum ?? 1}
             />
           ) : (
             <div id="tickets" className="bg-surface border border-border rounded-2xl p-6">
