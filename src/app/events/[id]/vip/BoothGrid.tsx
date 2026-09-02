@@ -91,6 +91,8 @@ export default function BoothGrid({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [bottleAck, setBottleAck] = useState(false);
+  const [boothUnderSelf, setBoothUnderSelf] = useState<boolean | null>(null);
+  const [otherName, setOtherName] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
   const boothsByArea = new Map<string, Booth[]>();
@@ -132,7 +134,9 @@ export default function BoothGrid({
       const res = await fetch("/api/vip/reserve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId, boothId, name, phone, email, bottleAck, ...(clientSlug ? { clientSlug } : {}) }),
+        body: JSON.stringify({ eventId, boothId, name, phone, email, bottleAck,
+          boothUnderName: boothUnderSelf === false ? otherName.trim() : name.trim(),
+          ...(clientSlug ? { clientSlug } : {}) }),
       });
 
       const data = await res.json();
@@ -164,7 +168,9 @@ export default function BoothGrid({
     name.trim().length > 0 &&
     phone.trim().length > 0 &&
     email.trim().length > 0 &&
-    bottleAck;
+    bottleAck &&
+    boothUnderSelf !== null &&
+    (boothUnderSelf === true || otherName.trim().length > 0);
 
   async function handlePayment() {
     if (phase.kind !== "held") return;
@@ -347,6 +353,46 @@ export default function BoothGrid({
                     placeholder="Email"
                     className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-plum/60 transition-colors text-sm"
                   />
+                </div>
+
+                {/* Booth under name question */}
+                <div className="space-y-2">
+                  <p className="text-text-muted text-xs leading-relaxed">
+                    Should the booth be under your name?
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setBoothUnderSelf(true); setOtherName(""); }}
+                      className={`rounded-xl px-4 py-3 text-sm border transition-colors ${
+                        boothUnderSelf === true
+                          ? "bg-plum/10 border-plum/60 text-text"
+                          : "bg-surface-2 border-border text-text-muted"
+                      }`}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBoothUnderSelf(false)}
+                      className={`rounded-xl px-4 py-3 text-sm border transition-colors ${
+                        boothUnderSelf === false
+                          ? "bg-plum/10 border-plum/60 text-text"
+                          : "bg-surface-2 border-border text-text-muted"
+                      }`}
+                    >
+                      No
+                    </button>
+                  </div>
+                  {boothUnderSelf === false && (
+                    <input
+                      type="text"
+                      value={otherName}
+                      onChange={(e) => setOtherName(e.target.value)}
+                      placeholder="Who's name?"
+                      className="w-full bg-surface-2 border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-plum/60 transition-colors text-sm"
+                    />
+                  )}
                 </div>
 
                 {/* Bottle minimum acknowledgement */}
