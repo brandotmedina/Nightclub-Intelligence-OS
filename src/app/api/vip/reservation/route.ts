@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
   const { data: reservation } = await supabaseAdmin
     .from("reservations")
-    .select("id, status, event_id, booth_id, fee, entries_included, customer_id")
+    .select("id, status, event_id, booth_id, fee, entries_included, customer_id, booth_under_name")
     .eq("id", payment.reservation_id)
     .eq("client_id", clientId)
     .single();
@@ -73,6 +73,7 @@ export async function GET(request: Request) {
       status: reservation.status,
       fee: reservation.fee,
       entries_included: reservation.entries_included,
+      booth_under_name: reservation.booth_under_name ?? null,
     },
     event: event ?? null,
     booth: booth ?? null,

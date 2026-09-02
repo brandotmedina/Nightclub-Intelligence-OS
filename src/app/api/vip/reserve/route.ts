@@ -9,7 +9,7 @@ const HOLD_MINUTES = 10;
 const BOOTH_FEE = 50;
 
 export async function POST(request: Request) {
-  const { eventId, boothId, name, phone, email, bottleAck, clientSlug } =
+  const { eventId, boothId, name, phone, email, bottleAck, boothUnderName, clientSlug } =
     await request.json();
 
   // a. Require bottle minimum acknowledgement
@@ -110,6 +110,7 @@ export async function POST(request: Request) {
       fee: BOOTH_FEE,
       entries_included: 8,
       bottle_min_ack: true,
+      booth_under_name: boothUnderName || null,
       status: "held",
       hold_expires_at: holdExpiresAt,
     })
