@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       // Load reservation to get customer_id, event_id, booth_id
       const { data: reservation } = await supabaseAdmin
         .from("reservations")
-        .select("id, customer_id, event_id, booth_id, status")
+        .select("id, customer_id, event_id, booth_id, status, booth_under_name")
         .eq("id", reservationId)
         .eq("client_id", clientId)
         .single();
@@ -148,6 +148,7 @@ export async function POST(request: Request) {
             event_name: eventRow?.name ?? null,
             event_date: eventRow?.event_date ?? null,
             amount: totalAmount,
+            booth_under_name: reservation.booth_under_name ?? null,
           };
 
           const controller = new AbortController();
