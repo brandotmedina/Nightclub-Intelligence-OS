@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       // Load reservation to get customer_id, event_id, booth_id
       const { data: reservation } = await supabaseAdmin
         .from("reservations")
-        .select("id, customer_id, event_id, booth_id, status, booth_under_name")
+        .select("id, customer_id, event_id, booth_id, status, booth_under_name, entries_included")
         .eq("id", reservationId)
         .eq("client_id", clientId)
         .single();
@@ -120,23 +120,32 @@ export async function POST(request: Request) {
             await Promise.all([
               supabaseAdmin
                 .from("customers")
-                .select("full_name, phone")
+                .select("full_name, phone, email")
                 .eq("id", reservation.customer_id)
                 .eq("client_id", clientId)
                 .single(),
               supabaseAdmin
                 .from("booths")
-                .select("label")
+                .select("label, area_id")
                 .eq("id", reservation.booth_id)
                 .eq("client_id", clientId)
                 .single(),
               supabaseAdmin
                 .from("events")
-                .select("name, event_date")
+                .select("name, event_date, bottle_minimum")
                 .eq("id", reservation.event_id)
                 .eq("client_id", clientId)
                 .single(),
             ]);
+
+          const { data: area } = booth?.area_id
+            ? await supabaseAdmin
+                .from("venue_areas")
+                .select("name")
+                .eq("id", booth.area_id)
+                .eq("client_id", clientId)
+                .single()
+            : { data: null };
 
           const payload = {
             type: "vip_confirmed",
@@ -144,19 +153,30 @@ export async function POST(request: Request) {
             reservation_id: reservationId,
             customer_name: customer?.full_name ?? null,
             customer_phone: customer?.phone ?? null,
+            customer_email: customer?.email ?? null,
             booth_label: booth?.label ?? null,
             event_name: eventRow?.name ?? null,
             event_date: eventRow?.event_date ?? null,
             amount: totalAmount,
             booth_under_name: reservation.booth_under_name ?? null,
+            bottle_minimum: eventRow?.bottle_minimum ?? 1,
+            entries_included: reservation.entries_included ?? null,
+            area_name: area?.name ?? null,
           };
+
+          const alertHeaders: Record<string, string> = {
+            "Content-Type": "application/json",
+          };
+          if (process.env.N8N_WEBHOOK_SECRET) {
+            alertHeaders["x-webhook-secret"] = process.env.N8N_WEBHOOK_SECRET;
+          }
 
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 5000);
           try {
             await fetch(alertUrl, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: alertHeaders,
               body: JSON.stringify(payload),
               signal: controller.signal,
             });
