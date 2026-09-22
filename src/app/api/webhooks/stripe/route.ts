@@ -67,6 +67,8 @@ export async function POST(request: Request) {
         .neq("id", reservationId)
         .maybeSingle();
 
+      let reservationStatus: "confirmed" | "payment_refund_due";
+
       if (conflict) {
         // Another reservation already confirmed this booth — never double-book.
         // Mark for manual refund so staff can action it; still return 200 to Stripe.
@@ -81,6 +83,7 @@ export async function POST(request: Request) {
           .from("reservations")
           .update({ status: "payment_refund_due" })
           .eq("id", reservationId);
+        reservationStatus = "payment_refund_due";
       } else {
         // Booth is still ours — confirm it
         const { error: confirmErr } = await supabaseAdmin
@@ -92,6 +95,7 @@ export async function POST(request: Request) {
           console.error("VIP reservation confirm failed", confirmErr);
           return new Response("Reservation confirm error", { status: 500 });
         }
+        reservationStatus = "confirmed";
       }
 
       // c. Record payment (fatal: stripe_session_id is our idempotency key)
@@ -148,7 +152,8 @@ export async function POST(request: Request) {
             : { data: null };
 
           const payload = {
-            type: "vip_confirmed",
+            type: reservationStatus === "confirmed" ? "vip_confirmed" : "vip_refund_due",
+            reservation_status: reservationStatus,
             client_id: clientId,
             reservation_id: reservationId,
             customer_name: customer?.full_name ?? null,
