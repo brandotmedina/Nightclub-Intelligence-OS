@@ -8,6 +8,7 @@ type Event = {
   event_date: string;
   price: number;
   flyer_url: string | null;
+  tickets_enabled?: boolean;
 };
 
 export default function EventCard({ event, clientSlug }: { event: Event; clientSlug?: string }) {
@@ -44,13 +45,15 @@ export default function EventCard({ event, clientSlug }: { event: Event; clientS
         <h2 className="font-display text-text font-semibold text-base leading-snug truncate group-hover:text-plum-bright transition-colors">
           {event.name}
         </h2>
-        <p
-          className={`text-sm font-medium mt-1 ${
-            isFree ? "text-success" : "text-text-muted"
-          }`}
-        >
-          {formatPrice(event.price)}
-        </p>
+        {event.tickets_enabled !== false && (
+          <p
+            className={`text-sm font-medium mt-1 ${
+              isFree ? "text-success" : "text-text-muted"
+            }`}
+          >
+            {formatPrice(event.price)}
+          </p>
+        )}
       </div>
 
       <span className="text-text-dim group-hover:text-plum transition-colors shrink-0 text-lg">
