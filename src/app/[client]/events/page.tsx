@@ -18,7 +18,7 @@ export default async function EventsPage({
 
   const { data: events, error } = await supabaseAdmin
     .from("events")
-    .select("id, name, event_date, price, flyer_url")
+    .select("id, name, event_date, price, flyer_url, tickets_enabled")
     .eq("client_id", client.id)
     .gte("event_date", today)
     .order("event_date", { ascending: true });

@@ -8,6 +8,7 @@ import { isPastEvent } from "@/lib/event-date";
 import TicketPurchaseForm from "@/app/events/[id]/TicketPurchaseForm";
 import EventCTAs from "@/app/events/[id]/EventCTAs";
 import AttributionCapture from "@/app/events/[id]/AttributionCapture";
+import HostedEventCTAs from "./HostedEventCTAs";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export default async function EventDetailPage({
 
   const { data: event, error } = await supabaseAdmin
     .from("events")
-    .select("id, name, event_date, price, flyer_url, dj_lineup, genre, vip_enabled, bottle_minimum")
+    .select("id, name, event_date, price, flyer_url, dj_lineup, genre, vip_enabled, bottle_minimum, tickets_enabled, external_ticket_url")
     .eq("client_id", client.id)
     .eq("id", id)
     .single();
@@ -32,11 +33,19 @@ export default async function EventDetailPage({
   if (isPastEvent(event.event_date)) redirect(`/${slug}/events`);
 
   const isFree = event.price === 0;
+  const ticketsEnabled = event.tickets_enabled ?? true;
+  const hostedUrl =
+    !ticketsEnabled &&
+    typeof event.external_ticket_url === "string" &&
+    event.external_ticket_url.startsWith("https://")
+      ? event.external_ticket_url
+      : null;
+  const showStickyBar = ticketsEnabled && !event.vip_enabled;
 
   return (
     <>
       <AttributionCapture />
-      <main className={`min-h-screen bg-bg text-text ${event.vip_enabled ? "pb-8" : "pb-28"}`}>
+      <main className={`min-h-screen bg-bg text-text ${showStickyBar ? "pb-28" : "pb-8"}`}>
         <div className="max-w-lg mx-auto px-4 pt-6 pb-6">
           <Link
             href={`/${slug}/events`}
@@ -70,15 +79,17 @@ export default async function EventDetailPage({
             <h1 className="font-display text-3xl font-bold text-text leading-tight mb-3">
               {event.name}
             </h1>
-            <span
-              className={`inline-block text-xs font-semibold px-3 py-1 rounded-full tracking-wide ${
-                isFree
-                  ? "bg-success/10 text-success border border-success/20"
-                  : "bg-surface-2 text-text-muted border border-border"
-              }`}
-            >
-              {isFree ? "Free Entry" : `$${event.price}`}
-            </span>
+            {ticketsEnabled && (
+              <span
+                className={`inline-block text-xs font-semibold px-3 py-1 rounded-full tracking-wide ${
+                  isFree
+                    ? "bg-success/10 text-success border border-success/20"
+                    : "bg-surface-2 text-text-muted border border-border"
+                }`}
+              >
+                {isFree ? "Free Entry" : `$${event.price}`}
+              </span>
+            )}
           </div>
 
           <div className="space-y-2 mb-8">
@@ -96,7 +107,15 @@ export default async function EventDetailPage({
             )}
           </div>
 
-          {event.vip_enabled ? (
+          {!ticketsEnabled ? (
+            <HostedEventCTAs
+              eventId={event.id}
+              clientSlug={slug}
+              vipEnabled={event.vip_enabled}
+              hostedUrl={hostedUrl}
+              bottleMinimum={event.bottle_minimum ?? 1}
+            />
+          ) : event.vip_enabled ? (
             <EventCTAs
               eventId={event.id}
               price={event.price}
@@ -115,7 +134,7 @@ export default async function EventDetailPage({
         </div>
       </main>
 
-      {!event.vip_enabled && (
+      {showStickyBar && (
         <div className="fixed bottom-0 inset-x-0 z-30 pointer-events-none">
           <div className="max-w-lg mx-auto px-4">
             <div className="pointer-events-auto pb-6 pt-10 bg-gradient-to-t from-bg to-transparent">

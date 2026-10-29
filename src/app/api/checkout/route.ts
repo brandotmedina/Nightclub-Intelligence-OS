@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
   const { data: event, error } = await supabaseAdmin
     .from("events")
-    .select("id, name, price, event_date")
+    .select("id, name, price, event_date, tickets_enabled")
     .eq("id", eventId)
     .eq("client_id", clientId)
     .single();
@@ -39,6 +39,10 @@ export async function POST(request: Request) {
 
   if (isPastEvent(event.event_date)) {
     return NextResponse.json({ error: "event_ended" }, { status: 403 });
+  }
+
+  if (event.tickets_enabled === false) {
+    return NextResponse.json({ error: "tickets_disabled" }, { status: 403 });
   }
 
   // ── Free event: skip Stripe, create records directly ─────────────────
