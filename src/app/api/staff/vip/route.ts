@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       supabaseAdmin
         .from("reservations")
         .select(
-          "id, booth_id, customer_id, booth_under_name, entries_included, fee, checked_in_at"
+          "id, booth_id, customer_id, booth_under_name, entries_included, fee, checked_in_at, source"
         )
         .eq("client_id", clientId)
         .eq("event_id", eventId)
@@ -67,6 +67,7 @@ export async function POST(request: Request) {
   const reservations = rows.map((r) => {
     const c = customerById.get(r.customer_id as string);
     const phone = (c?.phone ?? null) as string | null;
+    const source = (r.source ?? "online") as string;
     return {
       id: r.id as string,
       booth_id: r.booth_id as string,
@@ -74,11 +75,12 @@ export async function POST(request: Request) {
       entries_included: (r.entries_included ?? null) as number | null,
       fee: (r.fee ?? null) as number | null,
       checked_in_at: (r.checked_in_at ?? null) as string | null,
+      source,
       customer: {
         full_name: (c?.full_name ?? null) as string | null,
         phone,
       },
-      is_comp: phone === COMP_PHONE,
+      is_comp: source === "comp" || phone === COMP_PHONE,
     };
   });
 
