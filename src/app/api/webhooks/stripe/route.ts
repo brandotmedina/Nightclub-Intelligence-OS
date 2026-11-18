@@ -56,15 +56,10 @@ export async function POST(request: Request) {
         return new Response("ok", { status: 200 }); // non-fatal: return 200
       }
 
-      // a. Idempotency: a reservation already in a terminal/post-payment state
-      // must not be re-confirmed, re-recorded, or re-alerted on redelivery.
-      if (
-        reservation.status === "confirmed" ||
-        reservation.status === "released" ||
-        reservation.status === "payment_refund_due"
-      ) {
-        console.log(
-          `[stripe-webhook] VIP no-op: reservation ${reservationId} already ${reservation.status}`
+      // a. A booth released by staff must never be re-confirmed by a late/retried webhook. confirmed/payment_refund_due redeliveries are handled by the session de-dup above.
+      if (reservation.status === "released") {
+        console.warn(
+          `[stripe-webhook] VIP no-op: reservation ${reservationId} is released — payment NOT re-confirmed; check Stripe for refund`
         );
         return new Response("ok", { status: 200 });
       }
