@@ -56,6 +56,14 @@ export async function POST(request: Request) {
         return new Response("ok", { status: 200 }); // non-fatal: return 200
       }
 
+      // a. A booth released by staff must never be re-confirmed by a late/retried webhook. confirmed/payment_refund_due redeliveries are handled by the session de-dup above.
+      if (reservation.status === "released") {
+        console.warn(
+          `[stripe-webhook] VIP no-op: reservation ${reservationId} is released — payment NOT re-confirmed; check Stripe for refund`
+        );
+        return new Response("ok", { status: 200 });
+      }
+
       // b. Double-book re-check: confirm no OTHER confirmed reservation for this booth+event
       const { data: conflict } = await supabaseAdmin
         .from("reservations")
