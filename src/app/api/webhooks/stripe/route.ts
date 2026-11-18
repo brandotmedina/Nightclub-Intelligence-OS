@@ -56,6 +56,19 @@ export async function POST(request: Request) {
         return new Response("ok", { status: 200 }); // non-fatal: return 200
       }
 
+      // a. Idempotency: a reservation already in a terminal/post-payment state
+      // must not be re-confirmed, re-recorded, or re-alerted on redelivery.
+      if (
+        reservation.status === "confirmed" ||
+        reservation.status === "released" ||
+        reservation.status === "payment_refund_due"
+      ) {
+        console.log(
+          `[stripe-webhook] VIP no-op: reservation ${reservationId} already ${reservation.status}`
+        );
+        return new Response("ok", { status: 200 });
+      }
+
       // b. Double-book re-check: confirm no OTHER confirmed reservation for this booth+event
       const { data: conflict } = await supabaseAdmin
         .from("reservations")
