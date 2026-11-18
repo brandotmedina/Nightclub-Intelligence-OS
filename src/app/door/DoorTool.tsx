@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatEventDate } from "@/lib/formatEvent";
+import VipDoorView from "./VipDoorView";
 
 type Phase = "auth" | "select-event" | "scanning";
-type ScanView = "scan" | "lookup";
+type ScanView = "scan" | "lookup" | "vip";
 type ResultStatus = "valid" | "already_used" | "wrong_event" | "not_found";
 type ScanResult = { status: ResultStatus; checkedInAt?: string } | null;
 type EventItem = { id: string; name: string; event_date: string };
@@ -144,10 +145,10 @@ export default function DoorTool() {
     };
   }, [phase, selectedEvent]);
 
-  // ── Pause/resume scanner when switching to lookup view ────────────────────
+  // ── Pause/resume scanner when leaving/returning to scan view ──────────────
   useEffect(() => {
     if (!scannerRef.current) return;
-    if (view === "lookup") {
+    if (view !== "scan") {
       try {
         scannerRef.current.pause(true);
       } catch {}
@@ -348,12 +349,28 @@ export default function DoorTool() {
             {selectedEvent && formatEventDate(selectedEvent.event_date)}
           </p>
         </div>
-        <button
-          onClick={() => switchView(view === "scan" ? "lookup" : "scan")}
-          className="text-purple-400 text-sm font-medium hover:text-purple-300 transition-colors py-1 px-2"
-        >
-          {view === "scan" ? "Look up" : "Scanner"}
-        </button>
+        <div className="w-14" />
+      </div>
+
+      {/* View toggle — Scan / Lookup / VIP */}
+      <div className="flex gap-1 p-1 mx-4 mt-3 bg-zinc-900 border border-zinc-800 rounded-xl shrink-0">
+        {(
+          [
+            ["scan", "Scan"],
+            ["lookup", "Lookup"],
+            ["vip", "VIP"],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() => switchView(id)}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+              view === id ? "bg-purple-600 text-white" : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Scanner view — kept in DOM so the camera stream stays alive */}
@@ -500,6 +517,15 @@ export default function DoorTool() {
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* VIP view */}
+      {view === "vip" && selectedEvent && (
+        <div className="flex-1 overflow-y-auto">
+          {/* storedPassRef is set once in handleAuth before any re-render reaches this view */}
+          {/* eslint-disable-next-line react-hooks/refs */}
+          <VipDoorView passcode={storedPassRef.current} eventId={selectedEvent.id} />
         </div>
       )}
 
